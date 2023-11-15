@@ -10,12 +10,44 @@ export default class IndexPage extends React.Component {
                 { name : `Sarah`, surname : `Conor` },
                 { name : `John`, surname : `Conor`, age : 15 },
                 { name : { a : `a`, b : `b` } },
+                { name : { x : `x`, y : `y` } },
             ]}/>
         )
     }
 }
 
-class RowCell {
+class RowNode {
+    private __parent : RowGroup | null = null
+    private __key    : string | null   = null
+
+    public set _parent(parent : RowGroup) {
+        if (this.__parent) throw new Error // @todo
+
+        this.__parent = parent
+    }
+    public get parent() {
+        return this.__parent
+    }
+    public get key() {
+        let { __key } = this
+
+        if (__key !== null) return __key
+
+        const { parent } = this
+
+        if (!parent) return null
+
+        __key = Object.entries(parent.children)
+            .find(([ key, value ]) => value === (this as unknown as RowGroup | RowCell))
+            ?.[0] || null
+
+        this.__key = __key
+
+        return __key
+    }
+}
+
+class RowCell extends RowNode {
     public static readonly symbol = Symbol(`RowCell`)
 
     public readonly element : JSX.Element
@@ -28,6 +60,8 @@ class RowCell {
         element : JSX.Element
         value   : any
     }) {
+        super()
+
         this.element = element
         this.value   = value
     }
@@ -38,11 +72,11 @@ class RowCell {
 }
 
 type RowChildren = {
-    [key : string] : RowCell | RowNode
+    [key : string] : RowCell | RowGroup
 }
 
-class RowNode {
-    public static readonly symbol = Symbol(`RowNode`)
+class RowGroup extends RowNode {
+    public static readonly symbol = Symbol(`RowGroup`)
 
     public readonly children : RowChildren
 
@@ -51,15 +85,19 @@ class RowNode {
     } : {
         children : RowChildren
     }) {
+        super()
+
         this.children = children
+
+        Object.values(children).forEach(child => child._parent = this)
     }
 
-    public get symbol() : typeof RowNode.symbol {
-        return RowNode.symbol
+    public get symbol() : typeof RowGroup.symbol {
+        return RowGroup.symbol
     }
 }
 
-type Row = RowCell | RowNode
+type Row = RowCell | RowGroup
 
 class HeaderNode {
     private __parent : HeaderGroup | null = null
@@ -124,6 +162,18 @@ class HeaderNode {
         process(this as unknown as HeaderGroup | HeaderCell)
 
         return rows
+    }
+    public get by_cells() : HeaderCell[] {
+        const node = this as unknown as HeaderGroup | HeaderCell
+
+        if (node.symbol === HeaderCell.symbol) return [ node ]
+        if (node.symbol === HeaderGroup.symbol) return (
+            Object.values(node.children)
+            .map(child => child.by_cells)
+            .flat()
+        )
+
+        ;((never : never) => { throw new Error })(node) // @todo
     }
     public get key() {
         let { __key } = this
@@ -267,10 +317,10 @@ class Table extends React.Component<TableProps, TableState> {
                         {header.by_rows
                         .slice(1)
                         .map((row, i) =>
-                            <tr key={i}>
+                            <tr key={`header-${i}`}>
                                 {row.map((cell, j) =>
                                     <th
-                                        key={`${i}-${j}`}
+                                        key={`header-${i}-${j}`}
                                         colSpan={cell.col_span}
                                         rowSpan={cell.row_span}
                                     >
@@ -281,20 +331,46 @@ class Table extends React.Component<TableProps, TableState> {
                         )}
                     </thead>
                 }
-                <tbody>
-                    {/* {rows.map((row, i) => {
-                        let j = 0
+                {   header &&
+                    <tbody>
+                        {rows.map((row, i) => {
+                            let j = 0
 
-                        function process(header : Header) {
-                            //
-                        }
+                            function process(header : Header, row? : Row) : JSX.Element[] {
+                                ++j
 
-                        return (
-                            <tr key={i}>
-                            </tr>
-                        )
-                    })} */}
-                </tbody>
+                                if (row && header.key === row.key) {
+                                    if (row.symbol === RowCell.symbol) return [
+                                        <td
+                                            key={j}
+                                            colSpan={header.col_span}
+                                        >
+                                            {row.element}
+                                        </td>
+                                    ]
+                                    if (header.symbol === HeaderGroup.symbol && row.symbol === RowGroup.symbol) return (
+                                        Object.entries(header.children)
+                                        .map(([ key, header ]) => process(header, row.children[key]))
+                                        .flat()
+                                    )
+                                }
+
+                                return [
+                                    <td
+                                        key={j}
+                                        colSpan={header.col_span}
+                                    />
+                                ]
+                            }
+
+                            return (
+                                <tr key={`body-${i}`}>
+                                    {process(header, row)}
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                }
             </table>
         )
     }
@@ -317,11 +393,11 @@ function parse_rows(data : any[]) : Row[] {
             ),
             value   : element,
         })
-        if (type === `object`) return new RowNode({
+        if (type === `object`) return new RowGroup({
             children : Object.fromEntries(
                 Object.entries(element)
                 .map(([ key, value ]) => [ key, process(value) ] as const)
-                .filter((x) : x is [ string, RowCell | RowNode ] => x[1] !== null)
+                .filter((x) : x is [ string, RowCell | RowGroup ] => x[1] !== null)
             )
         })
 
@@ -336,7 +412,7 @@ function parse_rows(data : any[]) : Row[] {
 function parse_header(rows : Row[]) {
     function process(row : Row) : Header {
         if (row.symbol === RowCell.symbol) return new HeaderCell
-        if (row.symbol === RowNode.symbol) return new HeaderGroup({
+        if (row.symbol === RowGroup.symbol) return new HeaderGroup({
             children : Object.fromEntries(
                 Object.entries(row.children)
                 .map(([ key, node ]) => [ key, process(node) ] as const)

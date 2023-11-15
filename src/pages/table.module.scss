@@ -1,7 +1,7 @@
 table.table {
     border: 1px solid black;
 
-    th, td {
+    th, td:not(:empty) {
         border: 1px solid black;
     }
 }
