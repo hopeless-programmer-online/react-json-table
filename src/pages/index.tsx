@@ -1,240 +1,352 @@
 import React from 'react'
+import styles from './table.module.scss'
 
 export default class IndexPage extends React.Component {
     public render() {
         return (
-            <table border={1}>
-                <caption>table</caption>
-                    <col span={1}/>
-                    <col span={2} style={{ backgroundColor : `rgb(255, 200, 200)` }}/>
-                    <col span={3} style={{ backgroundColor : `rgb(200, 255, 200)` }}/>
-                    <col span={3} style={{ backgroundColor : `rgb(200, 200, 255)` }}/>
-                    <col span={1}/>
-                <colgroup>
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th rowSpan={3}/>
+            <Table data={[
+                // 1, 2, 3,
+                { name : `John`, surname : `Doe`, age : 20 },
+                { name : `Sarah`, surname : `Conor` },
+                { name : `John`, surname : `Conor`, age : 15 },
+                { name : { a : `a`, b : `b` } },
+            ]}/>
+        )
+    }
+}
 
-                        <th rowSpan={2}>Suite</th>
-                        <th>Name</th>
-                        <td colSpan={3}>Suite #0</td>
-                        <td colSpan={3}>Suite #1</td>
+class RowCell {
+    public static readonly symbol = Symbol(`RowCell`)
 
-                        <th rowSpan={3}/>
-                    </tr>
-                    <tr>
-                        <th>Id</th>
-                        <td colSpan={3}>0</td>
-                        <td colSpan={3}>1</td>
-                    </tr>
-                    <tr>
-                        <th colSpan={2}>Status</th>
-                        <td colSpan={3}>passed</td>
-                        <td colSpan={3}>failed</td>
-                    </tr>
-                </thead>
-                <thead>
-                    <tr>
-                        <th rowSpan={2}><input type={`checkbox`}/></th>
+    public readonly element : JSX.Element
+    public readonly value   : any
 
-                        <th colSpan={2}>Case</th>
+    public constructor({
+        element,
+        value,
+    } : {
+        element : JSX.Element
+        value   : any
+    }) {
+        this.element = element
+        this.value   = value
+    }
 
-                        <th rowSpan={2}>Input</th>
-                        <th colSpan={2}>Run</th>
+    public get symbol() : typeof RowCell.symbol {
+        return RowCell.symbol
+    }
+}
 
-                        <th rowSpan={2}>Input</th>
-                        <th colSpan={2}>Run</th>
+type RowChildren = {
+    [key : string] : RowCell | RowNode
+}
 
-                        <th rowSpan={2}></th>
-                    </tr>
-                    <tr>
-                        <th>Name</th>
-                        <th>Id</th>
+class RowNode {
+    public static readonly symbol = Symbol(`RowNode`)
 
-                        <th>Output</th>
-                        <th>Status</th>
+    public readonly children : RowChildren
 
-                        <th>Output</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <thead>
-                    <tr>
-                        <th/>
+    public constructor({
+        children,
+    } : {
+        children : RowChildren
+    }) {
+        this.children = children
+    }
 
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
+    public get symbol() : typeof RowNode.symbol {
+        return RowNode.symbol
+    }
+}
 
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
+type Row = RowCell | RowNode
 
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
-                        <th>
-                            <input type={`search`} placeholder={`filter`}/>
-                            <button role={`button`}>🔗</button>
-                            <button role={`button`}>↓</button>
-                        </th>
+class HeaderNode {
+    private __parent : HeaderGroup | null = null
+    private __depth  : number | null      = null
+    private __key    : string | null      = null
 
-                        <th/>
-                    </tr>
-                </thead>
-                <tbody style={{ backgroundColor : `rgb(200, 200, 200)` }}>
-                    <tr>
-                        <th><input type={`checkbox`}/></th>
+    public set _parent(parent : HeaderGroup) {
+        if (this.__parent) throw new Error // @todo
 
-                        <td>Test #17</td>
-                        <td>0</td>
+        this.__parent = parent
+    }
+    public get parent() {
+        return this.__parent
+    }
+    public get root() : HeaderGroup | HeaderCell {
+        let last : HeaderGroup | HeaderCell = this as unknown as HeaderGroup | HeaderCell
 
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
+        while (true) {
+            const parent : HeaderGroup | null = last.parent
 
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
+            if (!parent) return last
 
-                        <th><input type={`checkbox`} checked={true}/></th>
-                    </tr>
-                    <tr>
-                        <th><input type={`checkbox`} checked={true}/></th>
+            last = parent
+        }
+    }
+    public get depth() : number {
+        let { __depth } = this
 
-                        <td>Test #45</td>
-                        <td>0</td>
+        if (__depth !== null) return __depth
 
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
+        const { parent } = this
 
-                        <td>1</td>
-                        <td>5</td>
-                        <td>failed</td>
+        __depth = parent ? parent.depth + 1 : 0
 
-                        <th><input type={`checkbox`} checked={true}/></th>
-                    </tr>
-                </tbody>
+        this.__depth = __depth
+
+        return __depth
+    }
+    public get max_depth() {
+        return this.depth
+    }
+    public get row_span() {
+        const { parent } = this
+
+        if (!parent) return 1
+
+        return parent.max_depth - parent.depth
+    }
+    public get by_rows() {
+        let rows : (HeaderGroup | HeaderCell)[][] = []
+
+        function process(node : HeaderGroup | HeaderCell, level : number = 0) {
+            if (!(level in rows)) rows[level] = []
+
+            rows[level].push(node)
+
+            if (node.symbol === HeaderGroup.symbol) {
+                Object.values(node.children).forEach(child => process(child, level + 1))
+            }
+        }
+
+        process(this as unknown as HeaderGroup | HeaderCell)
+
+        return rows
+    }
+    public get key() {
+        let { __key } = this
+
+        if (__key !== null) return __key
+
+        const { parent } = this
+
+        if (!parent) return null
+
+        __key = Object.entries(parent.children)
+            .find(([ key, value ]) => value === (this as unknown as HeaderGroup | HeaderCell))
+            ?.[0] || null
+
+        this.__key = __key
+
+        return __key
+    }
+}
+
+class HeaderCell extends HeaderNode {
+    public static readonly symbol = Symbol(`HeaderCell`)
+
+    public get symbol() : typeof HeaderCell.symbol {
+        return HeaderCell.symbol
+    }
+    public get col_span() {
+        return 1
+    }
+
+    public clone() {
+        return new HeaderCell
+    }
+    public merge(header : Header) {
+        if (header.symbol === HeaderCell.symbol) return this
+        if (header.symbol === HeaderGroup.symbol) return header
+
+        ;((never : never) => { throw new Error })(header) // @todo
+    }
+}
+
+type HeaderChildren = {
+    [key : string] : HeaderCell | HeaderGroup
+}
+
+class HeaderGroup extends HeaderNode {
+    public static readonly symbol = Symbol(`HeaderGroup`)
+
+    private __max_depth : number | null = null
+
+    public readonly children : HeaderChildren
+
+    public constructor({
+        children = {},
+    } : {
+        children? : HeaderChildren
+    } = {}) {
+        super()
+
+        this.children = children
+
+        Object.values(children).forEach(child => child._parent = this)
+    }
+
+    public get max_depth() : number {
+        let { __max_depth } = this
+
+        if (__max_depth !== null) return __max_depth
+
+        __max_depth = Math.max(this.depth,
+            ...Object.values(this.children)
+            .map(child => child.max_depth)
+        )
+
+        this.__max_depth = __max_depth
+
+        return __max_depth
+    }
+    public get row_span() {
+        return 1
+    }
+    public get symbol() : typeof HeaderGroup.symbol {
+        return HeaderGroup.symbol
+    }
+    public get col_span() : number {
+        return Object.entries(this.children)
+            .reduce((a, [ _, x ]) => a + x.col_span, 0)
+    }
+
+    public clone() : HeaderGroup {
+        return new HeaderGroup({
+            children : Object.fromEntries(
+                Object.entries(this.children)
+                .map(([ key, child ]) => [ key, child.clone() ])
+            )
+        })
+    }
+    public merge(header : Header) : HeaderGroup {
+        if (header.symbol === HeaderCell.symbol) return this
+        if (header.symbol === HeaderGroup.symbol) return new HeaderGroup({
+            children : {
+                ...Object.fromEntries(
+                    Object.entries(this.children)
+                    .map(([ key, child ]) => [ key, key in header.children
+                        ? child.merge(header.children[key])
+                        : child
+                    ] as const)
+                    .map(([ key, child ]) => [ key, child.clone() ]),
+                ),
+                ...Object.fromEntries(
+                    Object.entries(header.children)
+                    .filter(([ key ]) => !(key in this.children))
+                    .map(([ key, child ]) => [ key, child.clone() ]),
+                ),
+            },
+        })
+
+        ;((never : never) => { throw new Error })(header) // @todo
+    }
+}
+
+type Header = HeaderCell | HeaderGroup
+
+type TableProps = {
+    data : any[]
+}
+type TableState = {}
+
+class Table extends React.Component<TableProps, TableState> {
+    public render() {
+        const { data } = this.props
+        const rows = parse_rows(data)
+        const header = parse_header(rows)
+
+        // console.log(header)
+
+        return (
+            <table className={styles.table}>
+                {   header &&
+                    <thead>
+                        {header.by_rows
+                        .slice(1)
+                        .map((row, i) =>
+                            <tr key={i}>
+                                {row.map((cell, j) =>
+                                    <th
+                                        key={`${i}-${j}`}
+                                        colSpan={cell.col_span}
+                                        rowSpan={cell.row_span}
+                                    >
+                                        {cell.key}
+                                    </th>
+                                )}
+                            </tr>
+                        )}
+                    </thead>
+                }
                 <tbody>
-                    <tr>
-                        <th><input type={`checkbox`}/></th>
+                    {/* {rows.map((row, i) => {
+                        let j = 0
 
-                        <td>Test #0</td>
-                        <td>0</td>
+                        function process(header : Header) {
+                            //
+                        }
 
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
-
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
-
-                        <th><input type={`checkbox`} checked={false}/></th>
-                    </tr>
-                    <tr>
-                        <th><input type={`checkbox`} checked={true}/></th>
-
-                        <td>Test #1</td>
-                        <td>0</td>
-
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
-
-                        <td>1</td>
-                        <td>5</td>
-                        <td>failed</td>
-
-                        <th><input type={`checkbox`} checked={false}/></th>
-                    </tr>
-                    <tr>
-                        <th><input type={`checkbox`}/></th>
-
-                        <td>Test #2</td>
-                        <td>0</td>
-
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
-
-                        <td colSpan={3}>---</td>
-
-                        <th><input type={`checkbox`} checked={false}/></th>
-                    </tr>
-                    <tr>
-                        <th><input type={`checkbox`}/></th>
-
-                        <td>Test #3</td>
-                        <td>0</td>
-
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
-
-                        <td>5</td>
-                        <td>5</td>
-                        <td>passed</td>
-
-                        <th><input type={`checkbox`} checked={false}/></th>
-                    </tr>
+                        return (
+                            <tr key={i}>
+                            </tr>
+                        )
+                    })} */}
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <th colSpan={10}>
-                            <div>
-                                <button>{`<<`}</button>
-                                <button>{`<`}</button>
-                                <button>1</button>
-                                <button>2</button>
-                                ..
-                                <button>7</button>
-                                <button disabled>8</button>
-                                <button>9</button>
-                                ..
-                                <button>99</button>
-                                <button>100</button>
-                                <button>{`>`}</button>
-                                <button>{`>>`}</button>
-                            </div>
-                            <div>
-                                <label>
-                                    📄
-                                    <input type={`number`} min={1} max={100} step={1} value={4}/>
-                                </label>
-                            </div>
-                        </th>
-                    </tr>
-                </tfoot>
             </table>
         )
     }
+}
+
+function parse_rows(data : any[]) : Row[] {
+    function process(element : any) : Row | null {
+        const type = typeof element
+
+        if (
+            type === `undefined` ||
+            type === `boolean` ||
+            type === `number` ||
+            type === `string` ||
+            type === `bigint` ||
+            element === null
+        ) return new RowCell({
+            element : (
+                <>{`${element}`}</>
+            ),
+            value   : element,
+        })
+        if (type === `object`) return new RowNode({
+            children : Object.fromEntries(
+                Object.entries(element)
+                .map(([ key, value ]) => [ key, process(value) ] as const)
+                .filter((x) : x is [ string, RowCell | RowNode ] => x[1] !== null)
+            )
+        })
+
+        return null
+    }
+
+    return data
+        .map(process)
+        .filter((x) : x is Row => x !== null)
+}
+
+function parse_header(rows : Row[]) {
+    function process(row : Row) : Header {
+        if (row.symbol === RowCell.symbol) return new HeaderCell
+        if (row.symbol === RowNode.symbol) return new HeaderGroup({
+            children : Object.fromEntries(
+                Object.entries(row.children)
+                .map(([ key, node ]) => [ key, process(node) ] as const)
+            )
+        })
+
+        ;((never : never) => { throw new Error })(row) // @todo
+    }
+
+    return rows
+        .map(process)
+        .reduce<Header | null>((a, x) => a ? a.merge(x) : x, null)
 }
