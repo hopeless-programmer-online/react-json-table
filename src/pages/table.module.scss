@@ -1,7 +1,163 @@
-table.table {
-    border: 1px solid black;
-
-    th, td:not(:empty) {
-        border: 1px solid black;
+@mixin colored_table($color) {
+    > caption {
+        background-color: $color;
     }
+    > thead,
+    > tbody,
+    > tfoot {
+        > tr {
+            > th,
+            > td {
+                background-color: $color;
+            }
+        }
+    }
+}
+
+@mixin round_table($radius) {
+    border-radius: $radius;
+
+    > caption,
+    > thead,
+    > tbody,
+    > tfoot {
+        &:first-child {
+            border-top-left-radius: $radius;
+            border-top-right-radius: $radius;
+        }
+        &:last-child {
+            border-bottom-left-radius: $radius;
+            border-bottom-right-radius: $radius;
+        }
+    }
+
+    > thead,
+    > tbody,
+    > tfoot {
+        &:first-child {
+            > tr {
+                &:first-child {
+                    > th,
+                    > td {
+                        &:first-child {
+                            border-top-left-radius: $radius;
+                        }
+                        &:last-child {
+                            border-top-right-radius: $radius;
+                        }
+                    }
+                }
+            }
+        }
+        &:last-child {
+            > tr {
+                &:last-child {
+                    > th,
+                    > td {
+                        &:first-child {
+                            border-bottom-left-radius: $radius;
+                        }
+                        &:last-child {
+                            border-bottom-right-radius: $radius;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@mixin padding_table($padding) {
+    > caption {
+        padding: $padding;
+    }
+    > thead,
+    > tbody,
+    > tfoot {
+        > tr {
+            > th,
+            > td {
+                padding: $padding;
+            }
+        }
+    }
+}
+
+@mixin horizontal_table_border($border) {
+    > thead,
+    > tbody,
+    > tfoot {
+        > tr {
+            > th,
+            > td {
+                &:not(:first-child) {
+                    border-left: $border;
+                }
+            }
+        }
+    }
+}
+
+@mixin vertical_table_border($border) {
+    > thead,
+    > tbody,
+    > tfoot {
+        &:not(:first-child) {
+            > tr {
+                > th,
+                > td {
+                    border-top: $border;
+                }
+            }
+        }
+    }
+}
+
+@mixin table() {
+    border-collapse: collapse;
+
+    @include colored_table(whitesmoke);
+    @include round_table(10px);
+    @include padding_table(4px);
+    @include horizontal_table_border(1px solid grey);
+    @include vertical_table_border(1px solid grey);
+
+    box-shadow: 0px 4px 12px rgba(black, 0.2);
+    color: rgb(30, 30, 30);
+    font-family: calibri;
+
+    > caption {
+        background-color: rgb(30, 30, 30);
+        color: white;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+    > thead,
+    > tfoot {
+        text-transform: capitalize;
+
+        > tr {
+            > th {
+                background-color: rgb(30, 30, 30);
+                color: white;
+            }
+        }
+    }
+    > tbody {
+        > tr:nth-child(2n + 1) {
+            > th,
+            > td {
+                background-color: lightgray;
+            }
+        }
+    }
+}
+
+table.table {
+    @include table();
+    // border: 1px solid black;
+
+    // th, td:not(:empty) {
+    //     // border: 1px solid black;
+    // }
 }

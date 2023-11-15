@@ -5,7 +5,7 @@ export default class IndexPage extends React.Component {
     public render() {
         return (
             <Table data={[
-                // 1, 2, 3,
+                1, 2, 3,
                 { name : `John`, surname : `Doe`, age : 20 },
                 { name : `Sarah`, surname : `Conor` },
                 { name : `John`, surname : `Conor`, age : 15 },
@@ -300,9 +300,18 @@ type Header = HeaderCell | HeaderGroup
 type TableProps = {
     data : any[]
 }
-type TableState = {}
+type TableState = {
+    //
+}
 
 class Table extends React.Component<TableProps, TableState> {
+    public state : TableState = {
+        //
+    }
+
+    public componentDidUpdate(props : TableProps) {
+        //
+    }
     public render() {
         const { data } = this.props
         const rows = parse_rows(data)
@@ -312,6 +321,9 @@ class Table extends React.Component<TableProps, TableState> {
 
         return (
             <table className={styles.table}>
+                <caption>
+                    table
+                </caption>
                 {   header &&
                     <thead>
                         {header.by_rows
@@ -370,6 +382,15 @@ class Table extends React.Component<TableProps, TableState> {
                             )
                         })}
                     </tbody>
+                }
+                {   header &&
+                    <tfoot>
+                        <tr>
+                            <th colSpan={header.col_span}>
+                                footer
+                            </th>
+                        </tr>
+                    </tfoot>
                 }
             </table>
         )
