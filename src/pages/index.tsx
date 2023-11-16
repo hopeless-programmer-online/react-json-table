@@ -5,12 +5,27 @@ export default class IndexPage extends React.Component {
     public render() {
         return (
             <Table data={[
-                1, 2, 3,
-                { name : `John`, surname : `Doe`, age : 20 },
-                { name : `Sarah`, surname : `Conor` },
-                { name : `John`, surname : `Conor`, age : 15 },
-                { name : { a : `a`, b : `b` } },
-                { name : { x : `x`, y : `y` } },
+                // 1, 2, 3,
+                // { name : `John`, surname : `Doe`, age : 20 },
+                // { name : `Sarah`, surname : `Conor` },
+                // { name : `John`, surname : `Conor`, age : 15 },
+                // { name : { a : `a`, b : `b` } },
+                // { name : { x : `x`, y : `y` } },
+                { [`test case`] : { name : `test case #1`, expectation : 42 }, [`test suite runs`] : {
+                    [`test suite #1`] : { result : 42, status : `pass` },
+                    [`test suite #2`] : { result : 42, status : `pass` },
+                    [`test suite #3`] : { result : 42, status : `pass` },
+                } },
+                { [`test case`] : { name : `test case #2`, expectation : 25 }, [`test suite runs`] : {
+                    [`test suite #1`] : { result : 25, status : `pass` },
+                    [`test suite #2`] : { result : 26, status : `fail` },
+                    [`test suite #3`] : { result : -1, status : `fail` },
+                } },
+                { [`test case`] : { name : `test case #3`, expectation : 99 }, [`test suite runs`] : {
+                    [`test suite #1`] : { result : 98, status : `fail` },
+                    [`test suite #2`] : { result : 99, status : `pass` },
+                    [`test suite #3`] : { result : 99, status : `pass` },
+                } },
             ]}/>
         )
     }
@@ -243,7 +258,7 @@ class HeaderGroup extends HeaderNode {
 
         if (__max_depth !== null) return __max_depth
 
-        __max_depth = Math.max(this.depth,
+        __max_depth = this.depth + Math.max(0,
             ...Object.values(this.children)
             .map(child => child.max_depth)
         )
@@ -322,7 +337,7 @@ class Table extends React.Component<TableProps, TableState> {
         return (
             <table className={styles.table}>
                 <caption>
-                    table
+                    test case runs
                 </caption>
                 {   header &&
                     <thead>

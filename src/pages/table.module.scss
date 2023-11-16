@@ -155,9 +155,4 @@
 
 table.table {
     @include table();
-    // border: 1px solid black;
-
-    // th, td:not(:empty) {
-    //     // border: 1px solid black;
-    // }
 }
