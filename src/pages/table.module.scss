@@ -14,6 +14,18 @@
     }
 }
 
+@mixin striped_table() {
+    > thead,
+    > tbody,
+    > tfoot {
+        > tr:nth-child(2n + 1) {
+            > td {
+                background-color: lightgray;
+            }
+        }
+    }
+}
+
 @mixin round_table($radius) {
     border-radius: $radius;
 
@@ -93,6 +105,9 @@
                 &:not(:first-child) {
                     border-left: $border;
                 }
+                &:not(:last-child) {
+                    border-right: $border;
+                }
             }
         }
     }
@@ -117,6 +132,7 @@
     border-collapse: collapse;
 
     @include colored_table(whitesmoke);
+    @include striped_table();
     @include round_table(10px);
     @include padding_table(4px);
     @include horizontal_table_border(1px solid grey);
@@ -143,16 +159,14 @@
             }
         }
     }
-    > tbody {
-        > tr:nth-child(2n + 1) {
-            > th,
-            > td {
-                background-color: lightgray;
-            }
-        }
-    }
 }
 
 table.table {
     @include table();
+}
+
+table.table1 {
+    th, td {
+        border: 1px solid;
+    }
 }
