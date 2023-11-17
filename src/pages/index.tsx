@@ -3,151 +3,151 @@ import styles from './table.module.scss'
 
 export default class IndexPage extends React.Component {
     public render() {
-        // return (
-        //     <Table data={[
-        //         // 1, 2, 3,
-        //         // { name : `John`, surname : `Doe`, age : 20 },
-        //         // { name : `Sarah`, surname : `Conor` },
-        //         // { name : `John`, surname : `Conor`, age : 15 },
-        //         // { name : { a : `a`, b : `b` } },
-        //         // { name : { x : `x`, y : `y` } },
-        //         { [`test case`] : { name : `test case #1`, expectation : 42 }, [`test suite runs`] : {
-        //             [`test suite #1`] : { result : 42, status : `pass` },
-        //             [`test suite #2`] : { result : 42, status : `pass` },
-        //             [`test suite #3`] : { result : 42, status : `pass` },
-        //         } },
-        //         { [`test case`] : { name : `test case #2`, expectation : 25 }, [`test suite runs`] : {
-        //             [`test suite #1`] : { result : 25, status : `pass` },
-        //             [`test suite #2`] : { result : 26, status : `fail` },
-        //             [`test suite #3`] : { result : -1, status : `fail` },
-        //         } },
-        //         { [`test case`] : { name : `test case #3`, expectation : 99 }, [`test suite runs`] : {
-        //             [`test suite #1`] : { result : 98, status : `fail` },
-        //             [`test suite #2`] : { result : 99, status : `pass` },
-        //             [`test suite #3`] : { result : 99, status : `pass` },
-        //         } },
-        //     ]}/>
-        // )
-
         return (
-            <table className={styles.table}>
-                <caption>
-                    Test Case Runs (4)
-                </caption>
-                <colgroup>
-                    <col span={2}/>
-                    <col span={2} style={{ backgroundColor : `rgb(255, 240, 240)` }}/>
-                    <col span={2} style={{ backgroundColor : `rgb(240, 255, 240)` }}/>
-                    <col span={2} style={{ backgroundColor : `rgb(240, 240, 255)` }}/>
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th rowSpan={3}>Test Suite Run</th>
-                        <th>Name</th>
-                        <td colSpan={2}>Test Suite Run #1</td>
-                        <td colSpan={2}>Test Suite Run #2</td>
-                        <td colSpan={2}>Test Suite Run #3</td>
-                    </tr>
-                    <tr>
-                        <th>Date</th>
-                        <td colSpan={2}>2023/01/01</td>
-                        <td colSpan={2}>2023/01/02</td>
-                        <td colSpan={2}>2023/01/03</td>
-                    </tr>
-                    <tr>
-                        <th>Status</th>
-                        <td colSpan={2}>FAIL</td>
-                        <td colSpan={2}>PASS</td>
-                        <td colSpan={2}>PASS</td>
-                    </tr>
-                </thead>
-                <thead>
-                    <tr>
-                        <th colSpan={2}>Test Case</th>
-                        <th colSpan={6}>Test Case Run</th>
-                        {/* <th rowSpan={2}>Status</th>
-                        <th rowSpan={2}>Actual</th>
-                        <th rowSpan={2}>Status</th>
-                        <th rowSpan={2}>Actual</th>
-                        <th rowSpan={2}>Status</th>
-                        <th rowSpan={2}>Actual</th> */}
-                    </tr>
-                    <tr>
-                        <th rowSpan={1}>Name</th>
-                        <th rowSpan={1}>Expected</th>
-                        {/* <th colSpan={2}>Test Suite Run #1</th>
-                        <th colSpan={2}>Test Suite Run #2</th>
-                        <th colSpan={2}>Test Suite Run #3</th> */}
-                        <th>Status</th>
-                        <th>Actual</th>
-                        <th>Status</th>
-                        <th>Actual</th>
-                        <th>Status</th>
-                        <th>Actual</th>
-                    </tr>
-                    {/* <tr>
-                        <th>Status</th>
-                        <th>Actual</th>
-                        <th>Status</th>
-                        <th>Actual</th>
-                        <th>Status</th>
-                        <th>Actual</th>
-                    </tr> */}
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>test case #1</td>
-                        <td>101</td>
-                        <td>pass</td>
-                        <td>101</td>
-                        <td>pass</td>
-                        <td>101</td>
-                        <td>pass</td>
-                        <td>101</td>
-                    </tr>
-                    <tr>
-                        <td>test case #2</td>
-                        <td>102</td>
-                        <td>fail</td>
-                        <td>101</td>
-                        <td>pass</td>
-                        <td>102</td>
-                        <td>pass</td>
-                        <td>102</td>
-                    </tr>
-                    <tr>
-                        <td>test case #3</td>
-                        <td>103</td>
-                        <td>pass</td>
-                        <td>103</td>
-                        <td>pass</td>
-                        <td>103</td>
-                        <td>pass</td>
-                        <td>103</td>
-                    </tr>
-                    <tr>
-                        <td>test case #4</td>
-                        <td>104</td>
-                        <td>pass</td>
-                        <td>104</td>
-                        <td>pass</td>
-                        <td>104</td>
-                        <td>pass</td>
-                        <td>104</td>
-                    </tr>
-                </tbody>
-                {/* <tfoot>
-                    <tr>
-                        <th colSpan={2}>mean</th>
-                        <td>pass</td>
-                        <td>102</td>
-                    </tr>
-                    <tr>
-                        <th colSpan={2}>median</th>
-                    </tr>
-                </tfoot> */}
-            </table>
+            <Table data={[
+                // 1, 2, 3,
+                // { name : `John`, surname : `Doe`, age : 20 },
+                // { name : `Sarah`, surname : `Conor` },
+                // { name : `John`, surname : `Conor`, age : 15 },
+                // { name : { a : `a`, b : `b` } },
+                // { name : { x : `x`, y : `y` } },
+                { [`test case`] : { name : `test case #1`, expectation : 42 }, [`test suite runs`] : {
+                    [`test suite #1`] : { result : 42, status : `pass` },
+                    [`test suite #2`] : { result : 42, status : `pass` },
+                    [`test suite #3`] : { result : 42, status : `pass` },
+                } },
+                { [`test case`] : { name : `test case #2`, expectation : 25 }, [`test suite runs`] : {
+                    [`test suite #1`] : { result : 25, status : `pass` },
+                    [`test suite #2`] : { result : 26, status : `fail` },
+                    [`test suite #3`] : { result : -1, status : `fail` },
+                } },
+                { [`test case`] : { name : `test case #3`, expectation : 99 }, [`test suite runs`] : {
+                    [`test suite #1`] : { result : 98, status : `fail` },
+                    [`test suite #2`] : { result : 99, status : `pass` },
+                    [`test suite #3`] : { result : 99, status : `pass` },
+                } },
+            ]}/>
         )
+
+        // return (
+        //     <table className={styles.table}>
+        //         <caption>
+        //             Test Case Runs (4)
+        //         </caption>
+        //         <colgroup>
+        //             <col span={2}/>
+        //             <col span={2} style={{ backgroundColor : `rgb(255, 240, 240)` }}/>
+        //             <col span={2} style={{ backgroundColor : `rgb(240, 255, 240)` }}/>
+        //             <col span={2} style={{ backgroundColor : `rgb(240, 240, 255)` }}/>
+        //         </colgroup>
+        //         <thead>
+        //             <tr>
+        //                 <th rowSpan={3}>Test Suite Run</th>
+        //                 <th>Name</th>
+        //                 <td colSpan={2}>Test Suite Run #1</td>
+        //                 <td colSpan={2}>Test Suite Run #2</td>
+        //                 <td colSpan={2}>Test Suite Run #3</td>
+        //             </tr>
+        //             <tr>
+        //                 <th>Date</th>
+        //                 <td colSpan={2}>2023/01/01</td>
+        //                 <td colSpan={2}>2023/01/02</td>
+        //                 <td colSpan={2}>2023/01/03</td>
+        //             </tr>
+        //             <tr>
+        //                 <th>Status</th>
+        //                 <td colSpan={2}>FAIL</td>
+        //                 <td colSpan={2}>PASS</td>
+        //                 <td colSpan={2}>PASS</td>
+        //             </tr>
+        //         </thead>
+        //         <thead>
+        //             <tr>
+        //                 <th colSpan={2}>Test Case</th>
+        //                 <th colSpan={6}>Test Case Run</th>
+        //                 {/* <th rowSpan={2}>Status</th>
+        //                 <th rowSpan={2}>Actual</th>
+        //                 <th rowSpan={2}>Status</th>
+        //                 <th rowSpan={2}>Actual</th>
+        //                 <th rowSpan={2}>Status</th>
+        //                 <th rowSpan={2}>Actual</th> */}
+        //             </tr>
+        //             <tr>
+        //                 <th rowSpan={1}>Name</th>
+        //                 <th rowSpan={1}>Expected</th>
+        //                 {/* <th colSpan={2}>Test Suite Run #1</th>
+        //                 <th colSpan={2}>Test Suite Run #2</th>
+        //                 <th colSpan={2}>Test Suite Run #3</th> */}
+        //                 <th>Status</th>
+        //                 <th>Actual</th>
+        //                 <th>Status</th>
+        //                 <th>Actual</th>
+        //                 <th>Status</th>
+        //                 <th>Actual</th>
+        //             </tr>
+        //             {/* <tr>
+        //                 <th>Status</th>
+        //                 <th>Actual</th>
+        //                 <th>Status</th>
+        //                 <th>Actual</th>
+        //                 <th>Status</th>
+        //                 <th>Actual</th>
+        //             </tr> */}
+        //         </thead>
+        //         <tbody>
+        //             <tr>
+        //                 <td>test case #1</td>
+        //                 <td>101</td>
+        //                 <td>pass</td>
+        //                 <td>101</td>
+        //                 <td>pass</td>
+        //                 <td>101</td>
+        //                 <td>pass</td>
+        //                 <td>101</td>
+        //             </tr>
+        //             <tr>
+        //                 <td>test case #2</td>
+        //                 <td>102</td>
+        //                 <td>fail</td>
+        //                 <td>101</td>
+        //                 <td>pass</td>
+        //                 <td>102</td>
+        //                 <td>pass</td>
+        //                 <td>102</td>
+        //             </tr>
+        //             <tr>
+        //                 <td>test case #3</td>
+        //                 <td>103</td>
+        //                 <td>pass</td>
+        //                 <td>103</td>
+        //                 <td>pass</td>
+        //                 <td>103</td>
+        //                 <td>pass</td>
+        //                 <td>103</td>
+        //             </tr>
+        //             <tr>
+        //                 <td>test case #4</td>
+        //                 <td>104</td>
+        //                 <td>pass</td>
+        //                 <td>104</td>
+        //                 <td>pass</td>
+        //                 <td>104</td>
+        //                 <td>pass</td>
+        //                 <td>104</td>
+        //             </tr>
+        //         </tbody>
+        //         {/* <tfoot>
+        //             <tr>
+        //                 <th colSpan={2}>mean</th>
+        //                 <td>pass</td>
+        //                 <td>102</td>
+        //             </tr>
+        //             <tr>
+        //                 <th colSpan={2}>median</th>
+        //             </tr>
+        //         </tfoot> */}
+        //     </table>
+        // )
     }
 }
 
