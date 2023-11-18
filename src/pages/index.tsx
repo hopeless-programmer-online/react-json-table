@@ -1,32 +1,36 @@
-import React from 'react'
+import React, { ReactNode } from 'react'
 import styles from './table.module.scss'
 
 export default class IndexPage extends React.Component {
     public render() {
         return (
-            <Table data={[
-                // 1, 2, 3,
-                // { name : `John`, surname : `Doe`, age : 20 },
-                // { name : `Sarah`, surname : `Conor` },
-                // { name : `John`, surname : `Conor`, age : 15 },
-                // { name : { a : `a`, b : `b` } },
-                // { name : { x : `x`, y : `y` } },
-                { [`test case`] : { name : `test case #1`, expectation : 42 }, [`test suite runs`] : {
-                    [`test suite #1`] : { result : 42, status : `pass` },
-                    [`test suite #2`] : { result : 42, status : `pass` },
-                    [`test suite #3`] : { result : 42, status : `pass` },
-                } },
-                { [`test case`] : { name : `test case #2`, expectation : 25 }, [`test suite runs`] : {
-                    [`test suite #1`] : { result : 25, status : `pass` },
-                    [`test suite #2`] : { result : 26, status : `fail` },
-                    [`test suite #3`] : { result : -1, status : `fail` },
-                } },
-                { [`test case`] : { name : `test case #3`, expectation : 99 }, [`test suite runs`] : {
-                    [`test suite #1`] : { result : 98, status : `fail` },
-                    [`test suite #2`] : { result : 99, status : `pass` },
-                    [`test suite #3`] : { result : 99, status : `pass` },
-                } },
-            ]}/>
+            <Table
+                title={`test case runs`}
+                data={[
+                    // 1, 2, 3,
+                    // { name : `John`, surname : `Doe`, age : 20 },
+                    // { name : `Sarah`, surname : `Conor` },
+                    // { name : `John`, surname : `Conor`, age : 15 },
+                    // { name : { a : `a`, b : `b` } },
+                    // { name : { x : `x`, y : `y` } },
+                    { [`test case`] : { name : `test case #1`, expectation : 42 }, [`test suite runs`] : {
+                        [`test suite #1`] : { result : 42, status : `pass` },
+                        [`test suite #2`] : { result : 42, status : `pass` },
+                        [`test suite #3`] : { result : 42, status : `pass` },
+                    } },
+                    { [`test case`] : { name : `test case #2`, expectation : 25 }, [`test suite runs`] : {
+                        [`test suite #1`] : { result : 25, status : `pass` },
+                        [`test suite #2`] : { result : 26, status : `fail` },
+                        [`test suite #3`] : { result : -1, status : `fail` },
+                    } },
+                    { [`test case`] : { name : `test case #3`, expectation : 99 }, [`test suite runs`] : {
+                        [`test suite #1`] : { result : 98, status : `fail` },
+                        [`test suite #2`] : { result : 99, status : `pass` },
+                        [`test suite #3`] : { result : 99, status : `pass` },
+                    } },
+                ]}
+            >
+            </Table>
         )
 
         // return (
@@ -433,13 +437,14 @@ class HeaderGroup extends HeaderNode {
 type Header = HeaderCell | HeaderGroup
 
 type TableProps = {
+    title? : React.ReactNode
     data : any[]
 }
 type TableState = {
     //
 }
 
-class Table extends React.Component<TableProps, TableState> {
+class Table extends React.Component<React.PropsWithChildren<TableProps>, TableState> {
     public state : TableState = {
         //
     }
@@ -448,17 +453,17 @@ class Table extends React.Component<TableProps, TableState> {
         //
     }
     public render() {
-        const { data } = this.props
+        const { title, data } = this.props
         const rows = parse_rows(data)
         const header = parse_header(rows)
 
-        // console.log(header)
-
         return (
             <table className={styles.table}>
-                <caption>
-                    test case runs
-                </caption>
+                {   title &&
+                    <caption>
+                        {title}
+                    </caption>
+                }
                 {   header &&
                     <thead>
                         {header.by_rows
