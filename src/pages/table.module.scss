@@ -9,7 +9,8 @@
             > th,
             > td {
                 background-color: $color;
-
+            }
+            > td {
                 &:empty {
                     background-color: #e5e5f7;
                     opacity: 0.8;
