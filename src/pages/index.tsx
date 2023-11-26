@@ -519,9 +519,9 @@ class Table<Element, Group> extends React.Component<
 
             const rows = elements
                 .map(x => Node.from_object(x))
-                .filter((x) : x is Node => !!x)
+                .filter((x) : x is Node<any> => !!x)
             const header = rows
-                .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+                .reduce<Node<any> | null>((a, x) => a ? a.merge(x) : x, null)
 
             return (
                 <table className={styles.table}>
@@ -536,60 +536,12 @@ class Table<Element, Group> extends React.Component<
                                 {row}
                             </tr>
                         )}
-                        {/* {header.along_cross_axis
-                        .slice(1)
-                        .map((row, i) =>
-                            <tr key={`header-${i}`}>
-                                {row.map((cell, j) =>
-                                    <th
-                                        key={`header-${i}-${j}`}
-                                        colSpan={cell.cross_span}
-                                        rowSpan={cell.main_span}
-                                    >
-                                        {cell.key}
-                                    </th>
-                                )}
-                            </tr>
-                        )} */}
                     </thead>}
-                    {/* {header && <tbody>
-                        {rows.map((row, i) => {
-                            let j = 0
-
-                            function process(header : Header, row? : Row) : JSX.Element[] {
-                                ++j
-
-                                if (row && header.key === row.key) {
-                                    if (row.symbol === DataCell.symbol) return [
-                                        <td
-                                            key={j}
-                                            colSpan={header.cross_span}
-                                        >
-                                            {row.element}
-                                        </td>
-                                    ]
-                                    if (header.symbol === HeaderGroup.symbol && row.symbol === DataGroup.symbol) return (
-                                        Object.entries(header.children)
-                                        .map(([ key, header ]) => process(header, row.children[key]))
-                                        .flat()
-                                    )
-                                }
-
-                                return [
-                                    <td
-                                        key={j}
-                                        colSpan={header.cross_span}
-                                    />
-                                ]
-                            }
-
-                            return (
-                                <tr key={`body-${i}`}>
-                                    {process(header, row)}
-                                </tr>
-                            )
-                        })}
-                    </tbody>} */}
+                    {header && <tbody>
+                        {rows.map((row, i) =>
+                            header.as_tr_match(row, `body-row-${i}`)
+                        )}
+                    </tbody>}
                 </table>
             )
         }
