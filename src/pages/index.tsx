@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react'
+import React from 'react'
+import { Node } from '../key-tree'
 import styles from './table.module.scss'
 
 export default class IndexPage extends React.Component {
@@ -27,7 +28,12 @@ export default class IndexPage extends React.Component {
                 <Table
                     title={`test case runs`}
                     elements={[
-                        { a : 1, b : { x : 2, y : 3 } },
+                        { a : 1 },
+                        { a : 2 },
+                        { b : 1 },
+                        { b : 2 },
+                        { a : { x : 1, y : 2 } },
+                        // { a : 1, b : { x : 2, y : 3 } },
                         // ...test_cases_1,
                     ]}
                 />
@@ -35,6 +41,7 @@ export default class IndexPage extends React.Component {
                     title={`test case runs`}
                     groups={[
                         { group : { a : 1, b : { x : 2, y : 3 } }, elements : test_cases_1 },
+                        { group : { a : 1, b : { x : 2, z : 4 } }, elements : test_cases_2 },
                         // { group : test_suite_1, elements : test_cases_1 },
                         // { group : {test_suite_1}, elements : test_cases_1 },
                         // { group : {test_suite_2}, elements : test_cases_2 },
@@ -509,8 +516,39 @@ class Table<Element, Group> extends React.Component<
 
         if (`elements` in this.props) {
             const { elements } = this.props
-            const rows = parse_rows(elements)
-            const header = parse_header(rows)
+
+            const rows = elements
+                .map(x => Node.from_object(x))
+                .filter((x) : x is Node => !!x)
+            const header = rows
+                .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+
+            const f = (node : Node) => {
+                let id = 0
+                const rows : any[] = []
+
+                const f = (node : Node, level = 0) => {
+                    if (!(level in rows)) rows[level] = []
+
+                    rows[level].push(
+                        <th
+                            key={`cell-${id}`}
+                            colSpan={node.spread}
+                            rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
+                        >
+                            {node.key}
+                        </th>
+                    )
+
+                    ++id
+
+                    node.for_each(x => f(x, level + 1))
+                }
+
+                f(node)
+
+                return rows
+            }
 
             return (
                 <table className={styles.table}>
@@ -518,7 +556,13 @@ class Table<Element, Group> extends React.Component<
                         {title}
                     </caption>}
                     {header && <thead>
-                        {header.along_cross_axis
+                        {f(header)
+                        .map((row, i) =>
+                            <tr key={`row-${i}`}>
+                                {row}
+                            </tr>
+                        )}
+                        {/* {header.along_cross_axis
                         .slice(1)
                         .map((row, i) =>
                             <tr key={`header-${i}`}>
@@ -532,9 +576,9 @@ class Table<Element, Group> extends React.Component<
                                     </th>
                                 )}
                             </tr>
-                        )}
+                        )} */}
                     </thead>}
-                    {header && <tbody>
+                    {/* {header && <tbody>
                         {rows.map((row, i) => {
                             let j = 0
 
@@ -571,7 +615,7 @@ class Table<Element, Group> extends React.Component<
                                 </tr>
                             )
                         })}
-                    </tbody>}
+                    </tbody>} */}
                 </table>
             )
         }
@@ -580,9 +624,8 @@ class Table<Element, Group> extends React.Component<
         const group_rows = parse_rows(groups.map(({ group }) => group))
         const group_header = parse_header(group_rows)
 
-        console.log(group_header?.along_main_axis)
-
         function f(root : Header) {
+            let i = 0
             const rows : any[][] = []
 
             function f(header : Header, row : number = 0) {
@@ -592,10 +635,12 @@ class Table<Element, Group> extends React.Component<
                 if (!(row in rows)) rows[row] = []
 
                 rows[row].push(
-                    <th colSpan={colspan} rowSpan={rowspan}>
-                        {header.key || `-`}({colspan}|{rowspan})
+                    <th colSpan={colspan} rowSpan={rowspan} id={`header-${i}`}>
+                        {header.key || ``}
                     </th>
                 )
+
+                ++i
 
                 if (header.symbol === HeaderGroup.symbol) {
                     Object.values(header.children).forEach((header) => {
@@ -622,21 +667,6 @@ class Table<Element, Group> extends React.Component<
                             {row.map(cell => cell)}
                         </tr>
                     ).flat()}
-                    {/* {group_header.along_main_axis
-                    // .slice(1)
-                    .map((column, i) =>
-                        <tr key={`header-${i}`}>
-                            {column.map((cell, j) =>
-                                <th
-                                    key={`header-${i}-${j}`}
-                                    colSpan={1}
-                                    rowSpan={1}
-                                >
-                                    {cell.key || `lol`}({cell.main_span}|{cell.cross_span})
-                                </th>
-                            )}
-                        </tr>
-                    )} */}
                 </thead>}
             </table>
         )
