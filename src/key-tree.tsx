@@ -128,4 +128,30 @@ export class Node {
     public max(callback : (node : Node, index : number, parent : typeof this) => number) : number {
         return this.reduce(-Infinity, (a, ...params) => Math.max(a, callback(...params)))
     }
+    public as_top_down_thead(id = ``) {
+        let index = 0
+        const rows : React.ReactNode[][] = []
+
+        function iterate(node : Node, level = 0) {
+            if (!(level in rows)) rows[level] = []
+
+            rows[level].push(
+                <th
+                    key={`${id}${index}`}
+                    colSpan={node.spread}
+                    rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
+                >
+                    {node.key}
+                </th>
+            )
+
+            ++index
+
+            node.for_each(x => iterate(x, level + 1))
+        }
+
+        iterate(this)
+
+        return rows
+    }
 }

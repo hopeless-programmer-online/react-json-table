@@ -523,42 +523,16 @@ class Table<Element, Group> extends React.Component<
             const header = rows
                 .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
 
-            const f = (node : Node) => {
-                let id = 0
-                const rows : any[] = []
-
-                const f = (node : Node, level = 0) => {
-                    if (!(level in rows)) rows[level] = []
-
-                    rows[level].push(
-                        <th
-                            key={`cell-${id}`}
-                            colSpan={node.spread}
-                            rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
-                        >
-                            {node.key}
-                        </th>
-                    )
-
-                    ++id
-
-                    node.for_each(x => f(x, level + 1))
-                }
-
-                f(node)
-
-                return rows
-            }
-
             return (
                 <table className={styles.table}>
                     {title && <caption>
                         {title}
                     </caption>}
                     {header && <thead>
-                        {f(header)
+                        {header.as_top_down_thead(`header-`)
+                        .slice(1)
                         .map((row, i) =>
-                            <tr key={`row-${i}`}>
+                            <tr key={`header-row-${i}`}>
                                 {row}
                             </tr>
                         )}
