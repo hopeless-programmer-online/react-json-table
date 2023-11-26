@@ -86,11 +86,9 @@ export class Node<Value> {
 
         if (index >= 0) {
             nodes[index].__parent = null
-
-            nodes.splice(index, 1)
+            nodes[index] = node
         }
-
-        nodes.push(node)
+        else nodes.push(node)
 
         node.__parent = this
 
@@ -183,5 +181,34 @@ export class Node<Value> {
                 {process(this, data)}
             </tr>
         )
+    }
+    public as_left_right_thead(id = ``) {
+        let i = 0
+        const rows : React.ReactNode[][] = []
+
+        function iterate(node : Node<Value>, row : number = 0) {
+            const colspan = node.empty ? node.root.max_depth - node.depth + 1 : 1
+            const rowspan = node.spread
+
+            if (!(row in rows)) rows[row] = []
+
+            rows[row].push(
+                <th colSpan={colspan} rowSpan={rowspan} id={`${id}-${i}`}>
+                    {node.key}
+                </th>
+            )
+
+            ++i
+
+            if (!node.empty) node.for_each((node) => {
+                iterate(node, row)
+
+                row += node.spread
+            })
+        }
+
+        iterate(this)
+
+        return rows
     }
 }

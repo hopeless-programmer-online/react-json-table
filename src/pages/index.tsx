@@ -529,7 +529,7 @@ class Table<Element, Group> extends React.Component<
                         {title}
                     </caption>}
                     {header && <thead>
-                        {header.as_top_down_thead(`header-`)
+                        {header.as_top_down_thead(`header`)
                         .slice(1)
                         .map((row, i) =>
                             <tr key={`header-row-${i}`}>
@@ -547,40 +547,11 @@ class Table<Element, Group> extends React.Component<
         }
 
         const { groups, identity } = this.props
-        const group_rows = parse_rows(groups.map(({ group }) => group))
-        const group_header = parse_header(group_rows)
-
-        function f(root : Header) {
-            let i = 0
-            const rows : any[][] = []
-
-            function f(header : Header, row : number = 0) {
-                const colspan = header.symbol === HeaderCell.symbol ? header.root.max_depth - header.depth : 1
-                const rowspan = header.spread
-
-                if (!(row in rows)) rows[row] = []
-
-                rows[row].push(
-                    <th colSpan={colspan} rowSpan={rowspan} id={`header-${i}`}>
-                        {header.key || ``}
-                    </th>
-                )
-
-                ++i
-
-                if (header.symbol === HeaderGroup.symbol) {
-                    Object.values(header.children).forEach((header) => {
-                        f(header, row)
-
-                        row += header.spread
-                    })
-                }
-            }
-
-            f(root)
-
-            return rows
-        }
+        const group_rows = groups
+            .map(({ group }) => Node<any>.from_object(group))
+            .filter((x) : x is Node<any> => !!x)
+        const group_header = group_rows
+            .reduce<Node<any> | null>((a, x) => a ? a.merge(x) : x, null)
 
         return (
             <table className={styles.table}>
@@ -588,7 +559,8 @@ class Table<Element, Group> extends React.Component<
                     {title}
                 </caption>}
                 {group_header && <thead>
-                    {f(group_header).map((row) =>
+                    {group_header.as_left_right_thead(`group-header`)
+                    .map(row =>
                         <tr>
                             {row.map(cell => cell)}
                         </tr>
