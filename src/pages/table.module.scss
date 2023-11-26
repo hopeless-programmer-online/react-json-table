@@ -9,18 +9,30 @@
             > th,
             > td {
                 background-color: $color;
+
+                &:empty {
+                    background-color: #e5e5f7;
+                    opacity: 0.8;
+                    background: repeating-linear-gradient(-45deg, gray, gray 2px, $color 2px, $color 8px );
+                }
             }
         }
     }
 }
 
-@mixin striped_table() {
+@mixin striped_table($color) {
     > thead,
     > tbody,
     > tfoot {
         > tr:nth-child(2n + 1) {
             > td {
-                background-color: lightgray;
+                background-color: $color;
+
+                &:empty {
+                    background-color: whitesmoke;
+                    opacity: 0.8;
+                    background: repeating-linear-gradient(-45deg, gray, gray 2px, $color 2px, $color 8px );
+                }
             }
         }
     }
@@ -133,7 +145,7 @@
     border-spacing: 0;
 
     @include colored_table(whitesmoke);
-    @include striped_table();
+    @include striped_table(lightgray);
     // @include round_table(10px);
     @include padding_table(4px);
     @include horizontal_table_border(1px solid grey);
