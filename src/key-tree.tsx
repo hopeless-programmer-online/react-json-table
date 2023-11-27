@@ -17,6 +17,8 @@ export class Node<Value> {
     }
 
     private __parent : Node<Value> | null = null
+    private __prev   : Node<Value> | null = null
+    private __next   : Node<Value> | null = null
 
     public readonly value : Value
     public readonly key   : string
@@ -39,6 +41,103 @@ export class Node<Value> {
     public get root() : Node<Value> {
         return this.parent ? this.parent.root : this
     }
+    public get prev() {
+        return this.__prev
+    }
+    public get next() {
+        return this.__next
+    }
+    public get depth_prev() : Node<Value> | null {
+        const { prev } = this
+
+        if (prev) return prev
+
+        let node = this.parent
+        let level = 0
+
+        while (true) {
+            ++level
+
+            if (!node) return null
+            if (node.prev) break
+
+            node = node.parent
+        }
+
+        node = node.prev
+
+        for (;level > 0; --level) {
+            if (!node.last) return null
+
+            node = node.last
+        }
+
+        return node
+    }
+    public get depth_next() : Node<Value> | null {
+        const { next } = this
+
+        if (next) return next
+
+        let node = this.parent
+        let level = 0
+
+        while (true) {
+            ++level
+
+            if (!node) return null
+            if (node.next) break
+
+            node = node.parent
+        }
+
+        node = node.next
+
+        for (;level > 0; --level) {
+            if (!node.first) return null
+
+            node = node.first
+        }
+
+        return node
+    }
+    public get all_next() {
+        let node = this.depth_next
+        const result : Node<Value>[] = []
+
+        while (node) {
+            result.push(node)
+
+            node = node.depth_next
+        }
+
+        return result
+    }
+    public get first() : Node<Value> | null {
+        const { nodes } = this
+
+        return nodes.length > 0 ? nodes[0] : null
+    }
+    public get last() : Node<Value> | null {
+        const { nodes } = this
+        const { length } = nodes
+
+        return length > 0 ? nodes[length - 1] : null
+    }
+    public get depth_first() : Node<Value> | null {
+        const { first } = this
+
+        if (first) return first
+
+        const { depth_next } = this
+
+        return depth_next ? depth_next.depth_first : null
+    }
+    public get path() : Node<Value>[] {
+        const { parent } = this
+
+        return parent ? [ ...parent.path, this ] : [ this ]
+    }
     public get empty() {
         return Object.values(this.nodes).length < 1
     }
@@ -50,6 +149,11 @@ export class Node<Value> {
     }
     public get spread() : number {
         return this.empty ? 1 : this.sum(node => node.spread)
+    }
+    public get leafs() : Node<Value>[] {
+        if (this.empty) return [ this ]
+
+        return this.map(node => node.leafs).flat()
     }
 
     public clone() : Node<Value> {
@@ -85,27 +189,33 @@ export class Node<Value> {
         const index = nodes.findIndex(child => child.key === node.key)
 
         if (index >= 0) {
-            nodes[index].__parent = null
+            const existed = nodes[index]
+
+            node.__prev = existed.__prev
+            node.__next = existed.__next
+
+            if (node.__prev) node.__prev.__next = node
+            if (node.__next) node.__next.__prev = node
+
+            existed.__parent = null
+            existed.__prev = null
+            existed.__next = null
             nodes[index] = node
         }
-        else nodes.push(node)
+        else {
+            const { length } = nodes
+
+            if (length > 0) {
+                node.__prev = nodes[length - 1]
+                node.__prev.__next = node
+            }
+
+            nodes.push(node)
+        }
 
         node.__parent = this
 
         return node
-    }
-    public remove(node : Node<Value>) {
-        if (node.parent !== this) return
-
-        const { nodes } = this
-
-        const index = nodes.findIndex(node => node.key === node.key)
-
-        if (index < 0) throw new Error // @todo
-
-        nodes.splice(index, 1)
-
-        node.__parent = null
     }
     public for_each(callback : (node : Node<Value>, index : number, parent : typeof this) => void) {
         Object.values(this.nodes).forEach(
