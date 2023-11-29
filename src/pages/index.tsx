@@ -8,23 +8,41 @@ const Node = kt.Node<any>
 export default class IndexPage extends React.Component {
     public render() {
         const test_suite_1 = {
-            name : `test suite #1`,
-            date : new Date(`2023-01-01T01:00:00.000Z`),
+            group : {
+                name   : `test suite #1`,
+                date   : new Date(`2023-01-01T01:00:00.000Z`),
+                status : `passed`,
+                KPI    : {
+                    accuracy  : 0.1,
+                    precision : 0.1,
+                    recall    : 0.3,
+                    F1        : 0.4,
+                },
+            },
+            elements : [
+                { name : `test case #1`, status : `pass` },
+                { name : `test case #2`, status : `pass` },
+                { name : `test case #3`, status : `pass` },
+            ],
         }
-        const test_cases_1 = [
-            { name : `test case #1`, status : `pass` },
-            { name : `test case #2`, status : `pass` },
-            { name : `test case #3`, status : `pass` },
-        ]
         const test_suite_2 = {
-            name : `test suite #2`,
-            date : new Date(`2023-01-01T02:00:00.000Z`),
+            group : {
+                name : `test suite #2`,
+                date : new Date(`2023-01-01T02:00:00.000Z`),
+                status : `failed`,
+                KPI    : {
+                    accuracy  : 0.5,
+                    precision : 0.6,
+                    recall    : 0.7,
+                    F1        : 0.8,
+                },
+            },
+            elements : [
+                { name : `test case #1`, status : `pass` },
+                { name : `test case #2`, status : `pass` },
+                { name : `test case #3`, status : `pass` },
+            ],
         }
-        const test_cases_2 = [
-            { name : `test case #1`, status : `pass` },
-            { name : `test case #2`, status : `pass` },
-            { name : `test case #3`, status : `pass` },
-        ]
 
         return (
             <>
@@ -42,17 +60,17 @@ export default class IndexPage extends React.Component {
                 <Table
                     title={`test case runs`}
                     groups={[
-                        { group : { a : 1 }, elements : [] },
-                        { group : { b : 2 }, elements : [] },
-                        { group : { a : 1, b : 2 }, elements : [] },
-                        // { group : { a : { x : 3, y : 4 } }, elements : [] },
-                        { group : { b : { x : 3, y : 4 } }, elements : [] },
-                        // { group : { a : 1, b : { x : 2, y : 3 } }, elements : test_cases_1 },
-                        // { group : { a : 1, b : { x : 2, z : 4 } }, elements : test_cases_2 },
-                        // { group : { a : 1, b : 5 }, elements : [] },
-                        // { group : test_suite_1, elements : test_cases_1 },
-                        // { group : {test_suite_1}, elements : test_cases_1 },
-                        // { group : {test_suite_2}, elements : test_cases_2 },
+                        // { group : { a : 1 }, elements : [] },
+                        // { group : { b : 2 }, elements : [] },
+                        // { group : { a : 1, b : 2 }, elements : [] },
+                        // // { group : { a : { x : 3, y : 4 } }, elements : [] },
+                        // { group : { b : { x : 3, y : 4 } }, elements : [] },
+                        // // { group : { a : 1, b : { x : 2, y : 3 } }, elements : test_cases_1 },
+                        // // { group : { a : 1, b : { x : 2, z : 4 } }, elements : test_cases_2 },
+                        // // { group : { a : 1, b : 5 }, elements : [] },
+                        // // { group : test_suite_1, elements : test_cases_1 },
+                        test_suite_1,
+                        test_suite_2,
                     ]}
                     identity={(a, b) => false}
                     // identity={(a, b) => a.name == b.name}
@@ -269,14 +287,10 @@ class Table<Element, Group> extends React.Component<
                     {title}
                 </caption>}
                 {group_header && <thead>
-                    {/* <tr>
-                        <th colSpan={group_header.spread}>
-                        </th>
-                    </tr> */}
                     {group_header.leafs.map((leaf, i) =>
                         <tr key={`header-${i}`}>
                             {leaf.path
-                            // .slice(1)
+                            .slice(1)
                             .reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
                                 <th
                                     key={`header-${i}-${j}`}
@@ -287,7 +301,6 @@ class Table<Element, Group> extends React.Component<
                                 </th>] : [])
                             ], [])}
                             {group_rows
-                            .slice(1)
                             .map((group, j) =>
                                 group && function iterate(node : Node, path : Node[]) : React.ReactNode {
                                     if (node.empty || path.length < 2) {
@@ -298,7 +311,7 @@ class Table<Element, Group> extends React.Component<
                                                 key={`header-${i}-${leaf.path.length + j}`}
                                                 rowSpan={path[0].spread}
                                             >
-                                                {node.value}
+                                                {`${node.value}`}
                                             </td>
                                         )
                                     }
