@@ -263,32 +263,25 @@ class Table<Element, Group> extends React.Component<
         const group_header = group_rows
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
 
-        // function f(header : Node) {
-        //     //
-        // }
-
         return (
             <table className={styles.table}>
                 {title && <caption>
                     {title}
                 </caption>}
                 {group_header && <thead>
-                    {group_header.as_left_right_thead(`group-header`)
-                    .map((row, i) =>
-                        <tr>
-                            {row.map(cell => cell)}
-                            {group_rows.map((row, j) =>
-                                <td key={`${i}-${j}`}>
-                                    {
-                                        group_header.leafs[i].path
-                                        .slice(1)
-                                        .reduce<Node | null>((a, x) => a && a.get(x.key), row)
-                                        ?.value
-                                    }
-                                </td>
-                            )}
+                    {group_header.leafs.map((leaf, i) =>
+                        <tr key={`header-${i}`}>
+                            {leaf.path.reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
+                                <th
+                                    key={`header-${i}-${j}`}
+                                    rowSpan={node.spread}
+                                    colSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
+                                >
+                                    {node.key}
+                                </th>] : [])
+                            ], [])}
                         </tr>
-                    ).flat()}
+                    )}
                 </thead>}
             </table>
         )

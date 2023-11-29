@@ -14,7 +14,7 @@
                 &:empty {
                     background-color: #e5e5f7;
                     opacity: 0.8;
-                    background: repeating-linear-gradient(-45deg, gray, gray 2px, $color 2px, $color 8px );
+                    background: repeating-linear-gradient(-45deg, gray, gray 2px, $color 3px, $color 8px);
                 }
             }
         }
@@ -32,7 +32,7 @@
                 &:empty {
                     background-color: whitesmoke;
                     opacity: 0.8;
-                    background: repeating-linear-gradient(-45deg, gray, gray 2px, $color 2px, $color 8px );
+                    background: repeating-linear-gradient(-45deg, gray, gray 2px, $color 3px, $color 8px);
                 }
             }
         }

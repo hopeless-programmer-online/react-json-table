@@ -102,8 +102,8 @@ export class Node<Value> {
         return node
     }
     public get all_next() {
-        let node = this.depth_next
         const result : Node<Value>[] = []
+        let node = this.depth_next
 
         while (node) {
             result.push(node)
@@ -149,6 +149,21 @@ export class Node<Value> {
     }
     public get spread() : number {
         return this.empty ? 1 : this.sum(node => node.spread)
+    }
+    public get spread_prev() : number {
+        let spread = 0
+        let { prev } = this
+
+        while (prev) {
+            spread += prev.spread
+            prev = prev.prev
+        }
+
+        const { parent } = this
+
+        if (parent) spread += parent.spread_prev
+
+        return spread
     }
     public get leafs() : Node<Value>[] {
         if (this.empty) return [ this ]
