@@ -259,8 +259,8 @@ class Table<Element, Group> extends React.Component<
         const { groups, identity } = this.props
         const group_rows = groups
             .map(({ group }) => Node.from_object(group))
-            .filter((x) : x is Node => !!x)
         const group_header = group_rows
+            .filter((x) : x is Node => !!x)
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
 
         return (
@@ -269,9 +269,15 @@ class Table<Element, Group> extends React.Component<
                     {title}
                 </caption>}
                 {group_header && <thead>
+                    {/* <tr>
+                        <th colSpan={group_header.spread}>
+                        </th>
+                    </tr> */}
                     {group_header.leafs.map((leaf, i) =>
                         <tr key={`header-${i}`}>
-                            {leaf.path.reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
+                            {leaf.path
+                            // .slice(1)
+                            .reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
                                 <th
                                     key={`header-${i}-${j}`}
                                     rowSpan={node.spread}
@@ -280,6 +286,39 @@ class Table<Element, Group> extends React.Component<
                                     {node.key}
                                 </th>] : [])
                             ], [])}
+                            {group_rows
+                            .slice(1)
+                            .map((group, j) =>
+                                group && function iterate(node : Node, path : Node[]) : React.ReactNode {
+                                    if (node.empty || path.length < 2) {
+                                        if (i != path[0].spread_prev) return null
+
+                                        return (
+                                            <td
+                                                key={`header-${i}-${leaf.path.length + j}`}
+                                                rowSpan={path[0].spread}
+                                            >
+                                                {node.value}
+                                            </td>
+                                        )
+                                    }
+
+                                    const nested = node.get(path[1].key)
+
+                                    if (!nested) {
+                                        if (i != path[1].spread_prev) return null
+
+                                        return (
+                                            <td
+                                                key={`header-${i}-${leaf.path.length + j}`}
+                                                rowSpan={path[1].spread}
+                                            />
+                                        )
+                                    }
+
+                                    return iterate(nested, path.slice(1))
+                                }(group, leaf.path)
+                            )}
                         </tr>
                     )}
                 </thead>}
