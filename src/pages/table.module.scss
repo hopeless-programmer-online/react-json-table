@@ -8,7 +8,7 @@
         > tr {
             > th,
             > td {
-                background-color: $color;
+                background-color: rgba($color, 0.5);
             }
             > td {
                 &:empty {
@@ -22,12 +22,17 @@
 }
 
 @mixin striped_table($color) {
+    > colgroup {
+        > col:nth-child(2n + 1) {
+            background-color: rgba(gray, 0.5);
+        }
+    }
     > thead,
     > tbody,
     > tfoot {
         > tr:nth-child(2n + 1) {
             > td {
-                background-color: $color;
+                background-color: rgba($color, 0.5);
 
                 &:empty {
                     background-color: whitesmoke;

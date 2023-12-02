@@ -21,7 +21,7 @@ export default class IndexPage extends React.Component {
             },
             elements : [
                 { info : { name : `test case #1`, id : 1 }, data : { input : { x : 1 }, result : 1, status : `pass` } },
-                { info : { name : `test case #2`, id : 2 }, data : { input : { x : 2 }, result : 2, status : `pass` } },
+                { info : { name : `test case #2`, id : 2 }, data : { input : { x : 2 },  status : `pass` } },
                 { info : { name : `test case #3`, id : 3 }, data : { input : { x : 3 }, result : 3, status : `pass` } },
             ],
         }
@@ -40,7 +40,7 @@ export default class IndexPage extends React.Component {
             elements : [
                 { info : { name : `test case #1`, id : 1 }, data : { input : { x : 1 }, result : 4, status : `fail` } },
                 { info : { name : `test case #2`, id : 2 }, data : { input : { x : 2 }, result : 5, status : `pass` } },
-                { info : { name : `test case #3`, id : 3 }, data : { input : { x : 3 }, result : 6, status : `pass` } },
+                { info : { name : `test case #3`, id : 3 }, data : { input : { x : 3 }, result : 6 } },
             ],
         }
         const groups = [
@@ -300,13 +300,19 @@ class Table<Element, Group> extends React.Component<
                 secondary_header?.max_depth || 0,
             )
             const primary_spread = primary_header?.spread || 1
-            // const primary_leafs = primary_header?.leafs
 
             return (
                 <table className={styles.table}>
                     {title && <caption>
                         {title}
                     </caption>}
+                    {secondary_header && <colgroup>
+                        {primary_header &&
+                        <col span={group_header.max_depth * primary_header.spread}/>}
+                        {element_groups.map((_, i) =>
+                            <col key={`col-${i}`} span={secondary_header.spread}/>
+                        )}
+                    </colgroup>}
                     <thead>
                         {group_header.leafs.map((leaf, i) =>
                             <tr key={`header-major-${i}`}>
@@ -404,28 +410,23 @@ class Table<Element, Group> extends React.Component<
 
                                     return header.map((header, j) => process(header, node.get(header.key) || null, i + j))
                                 })(primary_header, element_groups
-                                    .map((group, i) => (group[i] || null) as Node | null)
+                                    .map((group) => (group[k] || null) as Node | null)
                                     .reduce((a, x) => a || x, null))
                                 }
-                                {/* {primary_header && element_groups.map((group, i) => {
-                                    const node = (group[i] || null) as Node | null
-                                    let j = 0
-
-                                    return (function process(header : Node, node : Node | null) : React.ReactNode[] {
-                                        ++j
-
-                                        if (header.empty || !node) {}
-
-                                        header.map(header => process(header, node?.get(header.key) || null))
-
-                                        return [
+                                {secondary_header && element_groups.map((group, j) =>
+                                    (function process(header : Node, node : Node | null, i = 0) : React.ReactNode[] {
+                                        if (header.empty || !node) return [
                                             <td
-                                                key={`body-${k}-${i}-${j}`}
+                                                key={`body-${k}-${j}-${i}`}
+                                                colSpan={header.spread}
                                             >
+                                                {node && node.value}
                                             </td>
                                         ]
-                                    })(primary_header, node)
-                                })} */}
+
+                                        return header.map((header, j) => process(header, node.get(header.key) || null, i + j))
+                                    })(secondary_header, (group[k] || null) as Node | null))
+                                }
                             </tr>
                         )}
                     </tbody>
