@@ -20,9 +20,9 @@ export default class IndexPage extends React.Component {
                 },
             },
             elements : [
-                { name : `test case #1`, status : `pass` },
-                { name : `test case #2`, status : `pass` },
-                { name : `test case #3`, status : `pass` },
+                { info : { name : `test case #1`, id : 1 }, data : { input : { x : 1 }, result : 1, status : `pass` } },
+                { info : { name : `test case #2`, id : 2 }, data : { input : { x : 2 }, result : 2, status : `pass` } },
+                { info : { name : `test case #3`, id : 3 }, data : { input : { x : 3 }, result : 3, status : `pass` } },
             ],
         }
         const test_suite_2 = {
@@ -38,11 +38,15 @@ export default class IndexPage extends React.Component {
                 },
             },
             elements : [
-                { name : `test case #1`, status : `pass` },
-                { name : `test case #2`, status : `pass` },
-                { name : `test case #3`, status : `pass` },
+                { info : { name : `test case #1`, id : 1 }, data : { input : { x : 1 }, result : 4, status : `fail` } },
+                { info : { name : `test case #2`, id : 2 }, data : { input : { x : 2 }, result : 5, status : `pass` } },
+                { info : { name : `test case #3`, id : 3 }, data : { input : { x : 3 }, result : 6, status : `pass` } },
             ],
         }
+        const groups = [
+            test_suite_1,
+            test_suite_2,
+        ]
 
         return (
             <>
@@ -59,21 +63,8 @@ export default class IndexPage extends React.Component {
                 />
                 <Table
                     title={`test case runs`}
-                    groups={[
-                        // { group : { a : 1 }, elements : [] },
-                        // { group : { b : 2 }, elements : [] },
-                        // { group : { a : 1, b : 2 }, elements : [] },
-                        // // { group : { a : { x : 3, y : 4 } }, elements : [] },
-                        // { group : { b : { x : 3, y : 4 } }, elements : [] },
-                        // // { group : { a : 1, b : { x : 2, y : 3 } }, elements : test_cases_1 },
-                        // // { group : { a : 1, b : { x : 2, z : 4 } }, elements : test_cases_2 },
-                        // // { group : { a : 1, b : 5 }, elements : [] },
-                        // // { group : test_suite_1, elements : test_cases_1 },
-                        test_suite_1,
-                        test_suite_2,
-                    ]}
-                    identity={(a, b) => false}
-                    // identity={(a, b) => a.name == b.name}
+                    groups={groups.map(x => x.group)}
+                    elements={groups.map(x => x.elements)}
                 />
             </>
         )
@@ -209,11 +200,8 @@ type TableProps<Element, Group> = (
             elements : Element[]
         }
         | {
-            groups : {
-                group : Group
-                elements : Element[]
-            }[]
-            identity : (a : Element, b : Element) => boolean
+            groups : Group[]
+            elements : Element[][]
         }
     )
 )
@@ -230,55 +218,182 @@ class Table<Element, Group> extends React.Component<
     }
 
     public render() {
-        const { title } = this.props
+        const { title, elements } = this.props
 
-        if (`elements` in this.props) {
-            const { elements } = this.props
-
-            const rows = elements
+        if (`groups` in this.props) {
+            const { groups } = this.props
+            const group_rows = groups
+                .map(x => Node.from_object(x))
+            const group_header = group_rows
+                .filter((x) : x is Node => !!x)
+                .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+            const element_groups = (elements as Element[][])
+                .map(x => x
+                    .map(x => Node.from_object(x))
+                    .filter((x) : x is Node => !!x)
+                )
+            const header = elements
+                .flat()
                 .map(x => Node.from_object(x))
                 .filter((x) : x is Node => !!x)
-            const header = rows
                 .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+            const indices = element_groups
+                .map(x => [ ...x.keys() ])
+                .flat()
+                .reduce<number[]>((a, x) => {
+                    if (a.indexOf(x) < 0) a.push(x)
+
+                    return a
+                }, [])
+            const unique_leafs = header?.leafs.filter(leaf =>
+                indices.every(i => {
+                    return element_groups
+                        .map(x => (x[i] || null) as Node | null)
+                        .reduce<{ match : boolean, node : Node | null }>((a, node) => {
+                            if (!node || !a.match) return a
+
+                            const end = leaf.trace(node)
+
+                            if (!end) return { ...a, match : false }
+                            if (!a.node) return { ...a, node : end }
+
+                            return { node : end, match : end.value === a.node.value }
+                        }, { match : true, node : null })
+                        .match
+                })
+            )
+            const primary_header = header && unique_leafs && (function filter(node : Node) : Node | null {
+                if (node.empty) return unique_leafs.includes(node) ? node.clone() : null
+
+                const nodes = node.nodes
+                    .map(filter)
+                    .filter((x) : x is Node => !!x)
+
+                if (nodes.length < 1) return null
+
+                const clone = new Node({ key : node.key, value : node.value })
+
+                nodes.forEach(x => clone.add(x))
+
+                return clone
+            })(header)
+            const secondary_header = header && unique_leafs && (function filter(node : Node) : Node | null {
+                if (node.empty) return !unique_leafs.includes(node) ? node.clone() : null
+
+                const nodes = node.nodes
+                    .map(filter)
+                    .filter((x) : x is Node => !!x)
+
+                if (nodes.length < 1) return null
+
+                const clone = new Node({ key : node.key, value : node.value })
+
+                nodes.forEach(x => clone.add(x))
+
+                return clone
+            })(header)
+
+            if (!group_header) return
+
+            const max_element_depth = Math.max(
+                primary_header?.max_depth || 0,
+                secondary_header?.max_depth || 0,
+            )
+            const primary_spread = primary_header?.spread || 1
 
             return (
                 <table className={styles.table}>
                     {title && <caption>
                         {title}
                     </caption>}
-                    {header && <thead>
+                    <thead>
+                        {group_header.leafs.map((leaf, i) =>
+                            <tr key={`header-major-${i}`}>
+                                {leaf.path
+                                .slice(1)
+                                .reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
+                                    <th
+                                        key={`header-major-${i}-${j}`}
+                                        rowSpan={node.spread}
+                                        colSpan={(node.empty ? node.root.max_depth - node.depth + 1 : 1) * primary_spread}
+                                    >
+                                        {node.key}
+                                    </th>] : [])
+                                ], [])}
+                                {group_rows
+                                .map((group, j) =>
+                                    group && function iterate(node : Node, path : Node[]) : React.ReactNode {
+                                        if (node.empty || path.length < 2) {
+                                            if (i != path[0].spread_prev) return null
+
+                                            return (
+                                                <td
+                                                    key={`header-major-${i}-${leaf.path.length + j}`}
+                                                    rowSpan={path[0].spread}
+                                                    colSpan={secondary_header ? secondary_header.spread : 1}
+                                                >
+                                                    {`${node.value}`}
+                                                </td>
+                                            )
+                                        }
+
+                                        const nested = node.get(path[1].key)
+
+                                        if (!nested) {
+                                            if (i != path[1].spread_prev) return null
+
+                                            return (
+                                                <td
+                                                    key={`header-${i}-${leaf.path.length + j}`}
+                                                    rowSpan={path[1].spread}
+                                                    colSpan={secondary_header ? secondary_header.spread : 1}
+                                                />
+                                            )
+                                        }
+
+                                        return iterate(nested, path.slice(1))
+                                    }(group, leaf.path)
+                                )}
+                            </tr>
+                        )}
+                    </thead>
+                    <thead>
                         {(function iterate(node : Node | null, i = 0) : React.ReactNode[] {
                             return node ? [
-                                <tr key={`header-${i}`}>
+                                <tr key={`header-primary-${i}`}>
                                     {[ node, ...node.all_next ].map((node, j) =>
                                         <th
-                                            key={`header-${i}-${j}`}
-                                            colSpan={node.spread}
-                                            rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
+                                            key={`header-secondary-${i}-${j}`}
+                                            colSpan={node.spread * group_header.max_depth}
+                                            rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
                                         >
                                             {node.key}
-                                            {/* ({node.spread}|{node.empty ? node.root.max_depth - node.depth + 1 : 1}) */}
                                         </th>
+                                    )}
+                                    {secondary_header && group_rows.map((_, k) =>
+                                        secondary_header.filter_all(x => x.depth === i).map((node, j) =>
+                                            <th
+                                                key={`header-main-${i}-${k}-${j}`}
+                                                colSpan={node.spread}
+                                                rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
+                                            >
+                                                {node.key}
+                                            </th>
+                                        )
                                     )}
                                 </tr>,
                                 ...iterate(node.depth_first, i + 1)
                             ] : []
-                        })(header).slice(1)}
-                    </thead>}
-                    {header && <tbody>
-                        {rows.map((row, i) =>
-                            header.as_tr_match(row, `body-row-${i}`)
-                        )}
-                    </tbody>}
+                        })(primary_header || secondary_header || null).slice(1)}
+                    </thead>
                 </table>
             )
         }
 
-        const { groups, identity } = this.props
-        const group_rows = groups
-            .map(({ group }) => Node.from_object(group))
-        const group_header = group_rows
+        const rows = elements
+            .map(x => Node.from_object(x))
             .filter((x) : x is Node => !!x)
+        const header = rows
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
 
         return (
@@ -286,55 +401,30 @@ class Table<Element, Group> extends React.Component<
                 {title && <caption>
                     {title}
                 </caption>}
-                {group_header && <thead>
-                    {group_header.leafs.map((leaf, i) =>
-                        <tr key={`header-${i}`}>
-                            {leaf.path
-                            .slice(1)
-                            .reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
-                                <th
-                                    key={`header-${i}-${j}`}
-                                    rowSpan={node.spread}
-                                    colSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
-                                >
-                                    {node.key}
-                                </th>] : [])
-                            ], [])}
-                            {group_rows
-                            .map((group, j) =>
-                                group && function iterate(node : Node, path : Node[]) : React.ReactNode {
-                                    if (node.empty || path.length < 2) {
-                                        if (i != path[0].spread_prev) return null
-
-                                        return (
-                                            <td
-                                                key={`header-${i}-${leaf.path.length + j}`}
-                                                rowSpan={path[0].spread}
-                                            >
-                                                {`${node.value}`}
-                                            </td>
-                                        )
-                                    }
-
-                                    const nested = node.get(path[1].key)
-
-                                    if (!nested) {
-                                        if (i != path[1].spread_prev) return null
-
-                                        return (
-                                            <td
-                                                key={`header-${i}-${leaf.path.length + j}`}
-                                                rowSpan={path[1].spread}
-                                            />
-                                        )
-                                    }
-
-                                    return iterate(nested, path.slice(1))
-                                }(group, leaf.path)
-                            )}
-                        </tr>
-                    )}
+                {header && <thead>
+                    {(function iterate(node : Node | null, i = 0) : React.ReactNode[] {
+                        return node ? [
+                            <tr key={`header-${i}`}>
+                                {[ node, ...node.all_next ].map((node, j) =>
+                                    <th
+                                        key={`header-${i}-${j}`}
+                                        colSpan={node.spread}
+                                        rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
+                                    >
+                                        {node.key}
+                                        {/* ({node.spread}|{node.empty ? node.root.max_depth - node.depth + 1 : 1}) */}
+                                    </th>
+                                )}
+                            </tr>,
+                            ...iterate(node.depth_first, i + 1)
+                        ] : []
+                    })(header).slice(1)}
                 </thead>}
+                {header && <tbody>
+                    {rows.map((row, i) =>
+                        header.as_tr_match(row, `body-row-${i}`)
+                    )}
+                </tbody>}
             </table>
         )
     }

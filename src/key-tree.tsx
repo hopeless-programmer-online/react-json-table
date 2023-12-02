@@ -255,6 +255,31 @@ export class Node<Value> {
     public max(callback : (node : Node<Value>, index : number, parent : typeof this) => number) : number {
         return this.reduce(-Infinity, (a, ...params) => Math.max(a, callback(...params)))
     }
+    public filter_all(callback : (node : Node<Value>) => boolean) : Node<Value>[] {
+        let result : Node<Value>[] = []
+
+        if (callback(this)) result.push(this)
+
+        this.for_each(x => result = result.concat(x.filter_all(callback)))
+
+        return result
+    }
+    public trace(node : Node<Value>) {
+        const { path } = this
+        let last : Node<Value> = node
+
+        if (last.key !== path[0].key) return null
+
+        for (const x of path.slice(1)) {
+            const next = last.get(x.key)
+
+            if (!next) return null
+
+            last = next
+        }
+
+        return last
+    }
     public as_top_down_thead(id = ``) {
         let index = 0
         const rows : React.ReactNode[][] = []
