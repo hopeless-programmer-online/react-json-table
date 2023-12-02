@@ -300,6 +300,7 @@ class Table<Element, Group> extends React.Component<
                 secondary_header?.max_depth || 0,
             )
             const primary_spread = primary_header?.spread || 1
+            // const primary_leafs = primary_header?.leafs
 
             return (
                 <table className={styles.table}>
@@ -386,6 +387,48 @@ class Table<Element, Group> extends React.Component<
                             ] : []
                         })(primary_header || secondary_header || null).slice(1)}
                     </thead>
+                    <tbody>
+                        {indices.map((k) =>
+                            <tr
+                                key={`body-${k}`}
+                            >
+                                {primary_header && (function process(header : Node, node : Node | null, i = 0) : React.ReactNode[] {
+                                    if (header.empty || !node) return [
+                                        <td
+                                            key={`body-${k}-${i}`}
+                                            colSpan={header.spread * group_header.max_depth}
+                                        >
+                                            {node && node.value}
+                                        </td>
+                                    ]
+
+                                    return header.map((header, j) => process(header, node.get(header.key) || null, i + j))
+                                })(primary_header, element_groups
+                                    .map((group, i) => (group[i] || null) as Node | null)
+                                    .reduce((a, x) => a || x, null))
+                                }
+                                {/* {primary_header && element_groups.map((group, i) => {
+                                    const node = (group[i] || null) as Node | null
+                                    let j = 0
+
+                                    return (function process(header : Node, node : Node | null) : React.ReactNode[] {
+                                        ++j
+
+                                        if (header.empty || !node) {}
+
+                                        header.map(header => process(header, node?.get(header.key) || null))
+
+                                        return [
+                                            <td
+                                                key={`body-${k}-${i}-${j}`}
+                                            >
+                                            </td>
+                                        ]
+                                    })(primary_header, node)
+                                })} */}
+                            </tr>
+                        )}
+                    </tbody>
                 </table>
             )
         }
