@@ -366,27 +366,22 @@ class Table<Element, Group> extends React.Component<
                     </thead>
                     <thead>
                         {(function iterate(node : Node | null, i = 0) : React.ReactNode[] {
+                            const th = (key : string, span = 1) => (node : Node, i : number) => (
+                                <th
+                                    key={`${key}-${i}`}
+                                    colSpan={node.spread * span}
+                                    rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
+                                >
+                                    {node.key}
+                                    <button>{`↑↓`}</button>
+                                </th>
+                            )
                             return node ? [
                                 <tr key={`header-primary-${i}`}>
-                                    {[ node, ...node.all_next ].map((node, j) =>
-                                        <th
-                                            key={`header-secondary-${i}-${j}`}
-                                            colSpan={node.spread * group_header.max_depth}
-                                            rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
-                                        >
-                                            {node.key}
-                                        </th>
-                                    )}
-                                    {secondary_header && group_rows.map((_, k) =>
-                                        secondary_header.filter_all(x => x.depth === i).map((node, j) =>
-                                            <th
-                                                key={`header-main-${i}-${k}-${j}`}
-                                                colSpan={node.spread}
-                                                rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
-                                            >
-                                                {node.key}
-                                            </th>
-                                        )
+                                    {[ node, ...node.all_next ].map(th(`header-secondary-${i}`, group_header.max_depth))}
+                                    {secondary_header && group_rows.map((_, k) => secondary_header
+                                        .filter_all(x => x.depth === i)
+                                        .map(th(`header-main-${i}-${k}`))
                                     )}
                                 </tr>,
                                 ...iterate(node.depth_first, i + 1)

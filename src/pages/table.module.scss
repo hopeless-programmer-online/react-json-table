@@ -176,6 +176,37 @@
             > th {
                 background-color: rgb(30, 30, 30);
                 color: white;
+
+                > button {
+                    background-color: whitesmoke;
+                    border: none;
+                    border-radius: 2px;
+                    outline: none;
+                    margin: 2px;
+                }
+            }
+        }
+    }
+    > thead {
+        > tr {
+            > th {
+                width: max-content;
+
+                > input {
+                    width: 100%;
+                    box-sizing: border-box;
+                    background-color: whitesmoke;
+                    white-space: nowrap;
+
+                    // visibility: hidden;
+                }
+
+                // &:hover,
+                // &:focus {
+                //     > input {
+                //         visibility: visible;
+                //     }
+                // }
             }
         }
     }
