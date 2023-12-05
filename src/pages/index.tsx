@@ -20,9 +20,9 @@ export default class IndexPage extends React.Component {
                 },
             },
             elements : [
-                { info : { name : `test case #1`, id : 1 }, data : { input : { x : 1 }, result : 1, status : `pass` } },
+                { info : { name : `test case #1`, id : 1 }, data : { input : { x : 1 }, result : 3, status : `pass` } },
                 { info : { name : `test case #2`, id : 2 }, data : { input : { x : 2 },  status : `pass` } },
-                { info : { name : `test case #3`, id : 3 }, data : { input : { x : 3 }, result : 3, status : `pass` } },
+                { info : { name : `test case #3`, id : 3 }, data : { input : { x : 3 }, result : 2, status : `pass` } },
             ],
         }
         const test_suite_2 = {
@@ -65,6 +65,30 @@ export default class IndexPage extends React.Component {
                     title={`test case runs`}
                     groups={groups.map(x => x.group)}
                     elements={groups.map(x => x.elements)}
+                />
+                <Matrix
+                    caption = {`test case runs`}
+                    columns = {[
+                        { name : `test suite #1`, status : `pass`, KPI : { a : 0.1, b : 0.2 } },
+                        { name : `test suite #2`, status : `fail`, KPI : { a : 0.3, b : 0.4 } },
+                    ]}
+                    rows    = {[
+                        { name : `text case #1`, data : { input : 1, reference : 1 } },
+                        { name : `text case #2`, data : { input : 2, reference : 2 } },
+                        { name : `text case #3`, data : { input : 3, reference : 3 } },
+                    ]}
+                    cells   = {[
+                        [
+                            { output : 1, status : `pass` },
+                            { output : 2, status : `pass` },
+                            { output : 3, status : `pass` },
+                        ],
+                        [
+                            { output : 1, status : `pass` },
+                            { status : `fail` },
+                            { output : 3, status : `pass` },
+                        ],
+                    ]}
                 />
             </>
         )
@@ -206,7 +230,7 @@ type TableProps<Element, Group> = (
     )
 )
 type TableState = {
-    //
+    indices : number[]
 }
 
 class Table<Element, Group> extends React.Component<
@@ -214,7 +238,40 @@ class Table<Element, Group> extends React.Component<
     TableState
 > {
     public state : TableState = {
-        //
+        indices : this.indices,
+    }
+
+    private get indices() {
+        if (`groups` in this.props) return this.props.elements
+            .map(x => x.map((_, i) => i))
+            .flat()
+            .reduce<number[]>((a, x) => {
+                if (a.indexOf(x) < 0) a.push(x)
+
+                return a
+            }, [])
+
+        return this.props.elements
+            .map((_, i) => i)
+    }
+
+    private sort = (column : number, header : Node) => () => {
+        console.log(`sort by `, header)
+
+        if (`groups` in this.props) {
+            const { elements } = this.props
+            const indices = this.indices
+                .map(i => [ i, (elements[column][i] || null) as Node | null ] as const)
+                .sort(([ _, a ], [ __, b ]) =>
+                    !a ? -1 :
+                    !b ? +1 :
+                    (a.value == b.value) ? 0 :
+                    (a.value > b.value) ? +1 : -1
+                )
+                .map(([ i ]) => i)
+
+            this.setState({ indices })
+        }
     }
 
     public render() {
@@ -237,14 +294,7 @@ class Table<Element, Group> extends React.Component<
                 .map(x => Node.from_object(x))
                 .filter((x) : x is Node => !!x)
                 .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
-            const indices = element_groups
-                .map(x => [ ...x.keys() ])
-                .flat()
-                .reduce<number[]>((a, x) => {
-                    if (a.indexOf(x) < 0) a.push(x)
-
-                    return a
-                }, [])
+            const indices = this.indices
             const unique_leafs = header?.leafs.filter(leaf =>
                 indices.every(i => {
                     return element_groups
@@ -300,6 +350,8 @@ class Table<Element, Group> extends React.Component<
                 secondary_header?.max_depth || 0,
             )
             const primary_spread = primary_header?.spread || 1
+
+            const { sort } = this
 
             return (
                 <table className={styles.table}>
@@ -365,7 +417,7 @@ class Table<Element, Group> extends React.Component<
                         )}
                     </thead>
                     <thead>
-                        {(function iterate(node : Node | null, i = 0) : React.ReactNode[] {
+                        {(function iterate(header : Node | null, i = 0) : React.ReactNode[] {
                             const th = (key : string, span = 1) => (node : Node, i : number) => (
                                 <th
                                     key={`${key}-${i}`}
@@ -373,18 +425,18 @@ class Table<Element, Group> extends React.Component<
                                     rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
                                 >
                                     {node.key}
-                                    <button>{`↑↓`}</button>
+                                    <button onClick={header ? sort(i, header) : undefined}>{`↑↓`}</button>
                                 </th>
                             )
-                            return node ? [
+                            return header ? [
                                 <tr key={`header-primary-${i}`}>
-                                    {[ node, ...node.all_next ].map(th(`header-secondary-${i}`, group_header.max_depth))}
+                                    {[ header, ...header.all_next ].map(th(`header-secondary-${i}`, group_header.max_depth))}
                                     {secondary_header && group_rows.map((_, k) => secondary_header
                                         .filter_all(x => x.depth === i)
                                         .map(th(`header-main-${i}-${k}`))
                                     )}
                                 </tr>,
-                                ...iterate(node.depth_first, i + 1)
+                                ...iterate(header.depth_first, i + 1)
                             ] : []
                         })(primary_header || secondary_header || null).slice(1)}
                     </thead>
@@ -469,3 +521,158 @@ class Table<Element, Group> extends React.Component<
     }
 }
 
+type MatrixProps<Row, Column, Cell> = {
+    caption? : React.ReactNode
+    columns  : Column[]
+    rows     : Row[]
+    cells    : ((Cell | undefined | null)[] | undefined | null)[]
+}
+type MatrixState = {}
+
+class Matrix<Row, Column, Cell> extends React.Component<
+    MatrixProps<Row, Column, Cell>,
+    MatrixState
+> {
+    public render() {
+        const { caption, rows, columns, cells } = this.props
+        const column_nodes = columns
+            .map(x => Node.from_object(x))
+        const column_header = column_nodes
+            .filter((x) : x is Node => !!x)
+            .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+        const row_nodes = rows
+            .map(x => Node.from_object(x))
+        const row_header = row_nodes
+            .filter((x) : x is Node => !!x)
+            .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+        const cell_nodes = cells
+            .map(x => x?.map(x => Node.from_object(x)))
+        const cell_header = cell_nodes
+            .filter((x) : x is (Node | null)[] => !!x)
+            .flat()
+            .filter((x) : x is Node => !!x)
+            .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+        const cell_indices = cells
+            .filter((x) : x is Cell[] => !!x)
+            .map(x => x.map((_, i) => i))
+            .flat()
+            .reduce<number[]>((a, x) => {
+                if (a.indexOf(x) < 0) a.push(x)
+
+                return a
+            }, [])
+
+        const primary_spread = row_header?.spread || 1
+        const secondary_spread = cell_header?.spread || 1
+        const max_element_depth = Math.max(
+            row_header?.max_depth || 0,
+            cell_header?.max_depth || 0,
+        )
+        const column_depth = column_header?.max_depth || 1
+
+        return (
+            <table className={styles.table}>
+                {caption && <caption>
+                    {caption}
+                </caption>}
+                {column_header && <thead>
+                    {column_header.leafs.map((leaf, i) =>
+                        <tr key={`header-major-${i}`}>
+                            {leaf.path.slice(1).reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
+                                <th
+                                    key={`header-major-${i}-${j}`}
+                                    rowSpan={node.spread}
+                                    colSpan={(node.empty ? node.root.max_depth - node.depth + 1 : 1) * primary_spread}
+                                >
+                                    {node.key}
+                                </th>] : [])
+                            ], [])}
+                            {column_nodes.map((column, j) =>
+                                column && function iterate(node : Node, path : Node[]) : React.ReactNode {
+                                    const th = (path : Node, node : Node | null = null) => {
+                                        if (i != path.spread_prev) return null
+
+                                        return (
+                                            <td
+                                                key={`header-major-${i}-${leaf.path.length + j}`}
+                                                rowSpan={path.spread}
+                                                colSpan={secondary_spread}
+                                            >
+                                                {node && `${node.value}`}
+                                            </td>
+                                        )
+                                    }
+
+                                    if (node.empty || path.length < 2) return th(path[0], node)
+
+                                    const nested = node.get(path[1].key)
+
+                                    if (!nested) return th(path[1])
+
+                                    return iterate(nested, path.slice(1))
+                                }(column, leaf.path)
+                            )}
+                        </tr>
+                    )}
+                </thead>}
+                <thead>
+                    {(function iterate(header : Node | null, i = 0) : React.ReactNode[] {
+                        const th = (key : string, span = 1) => (node : Node, i : number) => (
+                            <th
+                                key={`${key}-${i}`}
+                                colSpan={node.spread * span}
+                                rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
+                            >
+                                {node.key}
+                            </th>
+                        )
+                        return header ? [
+                            <tr key={`header-primary-${i}`}>
+                                {[ header, ...header.all_next ].map(th(`header-secondary-${i}`, column_depth))}
+                                {cell_header && column_nodes.map((_, k) => cell_header
+                                    .filter_all(x => x.depth === i)
+                                    .map(th(`header-main-${i}-${k}`))
+                                )}
+                            </tr>,
+                            ...iterate(header.depth_first, i + 1)
+                        ] : []
+                    })(row_header || cell_header).slice(1)}
+                </thead>
+                <tbody>
+                    {cell_indices.map((k) =>
+                        <tr
+                            key={`body-${k}`}
+                        >
+                            {row_header && (function process(header : Node, node : Node | null, i = 0) : React.ReactNode[] {
+                                if (header.empty || !node) return [
+                                    <td
+                                        key={`body-${k}-${i}`}
+                                        colSpan={header.spread * column_depth}
+                                    >
+                                        {node && node.value}
+                                    </td>
+                                ]
+
+                                return header.map((header, j) => process(header, node.get(header.key) || null, i + j))
+                            })(row_header, row_nodes[k])}
+                            {cell_header && cell_nodes.map((nodes, j) =>
+                                (function process(header : Node, node : Node | null, i = 0) : React.ReactNode[] {
+                                    if (header.empty || !node) return [
+                                        <td
+                                            key={`body-${k}-${j}-${i}`}
+                                            colSpan={header.spread}
+                                        >
+                                            {node && node.value}
+                                        </td>
+                                    ]
+
+                                    return header.map((header, j) => process(header, node.get(header.key) || null, i + j))
+                                })(cell_header, (nodes && nodes[k] || null) as Node | null))
+                            }
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        )
+    }
+}
