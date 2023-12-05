@@ -175,9 +175,11 @@ type TableProps<Element> = {
     elements : Element[]
 }
 type TableState = {
-    rows    : Node[]
-    header  : Node | null,
-    indices : number[]
+    rows        : Node[]
+    header      : Node | null,
+    indices     : number[]
+    sort_header : Node | null,
+    sort_order  : boolean,
 }
 
 class Table<Element> extends React.Component<TableProps<Element>, TableState> {
@@ -190,12 +192,12 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
         const indices = props.elements
             .map((_, i) => i)
 
-        return { rows, header, indices }
+        return { rows, header, indices, sort_header : null, sort_order : false }
     }
 
     public state : TableState = Table.state(this.props)
 
-    private sort = (header : Node) => () => {
+    private sort = (sort_header : Node, sort_order : boolean) => () => {
         const { state } = this
         const indices = state.indices
             .map(i => {
@@ -203,20 +205,22 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
 
                 console.log(value)
 
-                if (value) value = header.trace(value)
+                if (value) value = sort_header.trace(value)
 
                 return [ i, value ] as const
             })
             .sort(([ _, a ], [ __, b ]) => compare(a, b))
             .map(([ i ]) => i)
 
-        this.setState({ indices })
+        if (sort_order) indices.reverse()
+
+        this.setState({ indices, sort_header, sort_order })
     }
 
     public render() {
         const {
             props : { title },
-            state : { rows, header, indices },
+            state : { rows, header, indices, sort_header, sort_order },
             sort,
         } = this
 
@@ -236,8 +240,9 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
                                         rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
                                     >
                                         {node.key}
-                                        <button onClick={sort(node)}>1</button>
-                                        {/* ({node.spread}|{node.empty ? node.root.max_depth - node.depth + 1 : 1}) */}
+                                        <button onClick={sort(node, node === sort_header ? !sort_order : sort_order)}>
+                                            {sort_order ? `↑` : `↓`}
+                                        </button>
                                     </th>
                                 )}
                             </tr>,
