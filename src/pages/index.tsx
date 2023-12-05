@@ -12,10 +12,13 @@ export default class IndexPage extends React.Component {
                 <Table
                     title={`test case runs`}
                     elements={[
-                        { a : 1 },
-                        { b : 2 },
                         { a : 1, b : 2 },
-                        { b : { x : 3, y : 4 } },
+                        { a : 3, b : 1 },
+                        { a : 2, b : 3 },
+                        // { a : 1 },
+                        // { b : 2 },
+                        // { a : 1, b : 2 },
+                        // { b : { x : 3, y : 4 } },
                     ]}
                 />
                 <Matrix
@@ -172,46 +175,50 @@ type TableProps<Element> = {
     elements : Element[]
 }
 type TableState = {
+    rows    : Node[]
+    header  : Node | null,
     indices : number[]
 }
 
-class Table<Element, Group> extends React.Component<TableProps<Element>, TableState> {
-    public state : TableState = {
-        indices : this.indices,
-    }
-
-    private get indices() {
-        return this.props.elements
-            .map((_, i) => i)
-    }
-
-//     private sort = (column : number, header : Node) => () => {
-//         console.log(`sort by `, header)
-//
-//         if (`groups` in this.props) {
-//             const { elements } = this.props
-//             const indices = this.indices
-//                 .map(i => [ i, (elements[column][i] || null) as Node | null ] as const)
-//                 .sort(([ _, a ], [ __, b ]) =>
-//                     !a ? -1 :
-//                     !b ? +1 :
-//                     (a.value == b.value) ? 0 :
-//                     (a.value > b.value) ? +1 : -1
-//                 )
-//                 .map(([ i ]) => i)
-//
-//             this.setState({ indices })
-//         }
-//     }
-
-    public render() {
-        const { title, elements } = this.props
-
-        const rows = elements
+class Table<Element> extends React.Component<TableProps<Element>, TableState> {
+    private static state<Element>(props : TableProps<Element>) : TableState {
+        const rows = props.elements
             .map(x => Node.from_object(x))
             .filter((x) : x is Node => !!x)
         const header = rows
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
+        const indices = props.elements
+            .map((_, i) => i)
+
+        return { rows, header, indices }
+    }
+
+    public state : TableState = Table.state(this.props)
+
+    private sort = (header : Node) => () => {
+        const { state } = this
+        const indices = state.indices
+            .map(i => {
+                let value = (state.rows[i] || null) as Node | null
+
+                console.log(value)
+
+                if (value) value = header.trace(value)
+
+                return [ i, value ] as const
+            })
+            .sort(([ _, a ], [ __, b ]) => compare(a, b))
+            .map(([ i ]) => i)
+
+        this.setState({ indices })
+    }
+
+    public render() {
+        const {
+            props : { title },
+            state : { rows, header, indices },
+            sort,
+        } = this
 
         return (
             <table className={styles.table}>
@@ -229,16 +236,19 @@ class Table<Element, Group> extends React.Component<TableProps<Element>, TableSt
                                         rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
                                     >
                                         {node.key}
+                                        <button onClick={sort(node)}>1</button>
                                         {/* ({node.spread}|{node.empty ? node.root.max_depth - node.depth + 1 : 1}) */}
                                     </th>
                                 )}
                             </tr>,
                             ...iterate(node.depth_first, i + 1)
                         ] : []
-                    })(header).slice(1)}
+                    })(header).slice(0)}
                 </thead>}
                 {header && <tbody>
-                    {rows.map((row, i) =>
+                    {indices
+                    .map(i => rows[i])
+                    .map((row, i) =>
                         header.as_tr_match(row, `body-row-${i}`)
                     )}
                 </tbody>}
@@ -398,4 +408,12 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
             </table>
         )
     }
+}
+
+function compare(a : Node | null, b : Node | null) {
+    if (!a) return -1
+    if (!b) return +1
+    if (a.value == b.value) return 0
+
+    return a.value > b.value ? +1 : -1
 }
