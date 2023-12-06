@@ -238,7 +238,7 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
                                     >
                                         {node.key}
                                         <button onClick={sort(node, node === sort_header ? !sort_order : sort_order)}>
-                                            {sort_order ? `↑` : `↓`}
+                                            {sort_order ? `↓` : `↑`}
                                         </button>
                                     </th>
                                 )}
@@ -435,7 +435,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                     <button
                                         onClick={sort_columns(node, node === column_sort_header ? !column_sort_order : column_sort_order)}
                                     >
-                                        {cell_sort_order ? `←` : `→`}
+                                        {column_sort_order ? `→` : `←`}
                                     </button>
                                 </th>] : [])
                             ], [])}
@@ -481,7 +481,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                     >
                                         {node.key}
                                         <button onClick={sort_rows(node, node === cell_sort_header ? !cell_sort_order : cell_sort_order)}>
-                                            {cell_sort_order ? `↑` : `↓`}
+                                            {cell_sort_order ? `↓` : `↑`}
                                         </button>
                                     </th>
                                 )}
@@ -496,7 +496,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                         >
                                             {node.key}
                                             <button onClick={sort_cells(column_index, node, node === cell_sort_header ? !cell_sort_order : cell_sort_order)}>
-                                                {cell_sort_order ? `↑` : `↓`}
+                                                {cell_sort_order ? `↓` : `↑`}
                                             </button>
                                         </th>
                                     )
