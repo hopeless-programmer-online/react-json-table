@@ -402,8 +402,8 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
             sort_cells,
         } = this
 
-        const primary_spread = row_header?.spread || 1
-        const secondary_spread = cell_header?.spread || 1
+        const row_spread = row_header?.spread || 1
+        const cell_spread = cell_header?.spread || 1
         const max_element_depth = Math.max(
             row_header?.max_depth || 0,
             cell_header?.max_depth || 0,
@@ -415,6 +415,13 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                 {caption && <caption>
                     {caption}
                 </caption>}
+                {column_header && <colgroup>
+                    {row_header &&
+                    <col span={column_depth * row_spread}/>}
+                    {column_nodes.map((_, i) =>
+                        <col key={`col-${i}`} span={cell_spread}/>
+                    )}
+                </colgroup>}
                 {column_header && <thead>
                     {column_header.leafs.map((leaf, i) =>
                         <tr key={`header-major-${i}`}>
@@ -422,7 +429,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                 <th
                                     key={`header-major-${i}-${j}`}
                                     rowSpan={node.spread}
-                                    colSpan={(node.empty ? node.root.max_depth - node.depth + 1 : 1) * primary_spread}
+                                    colSpan={(node.empty ? node.root.max_depth - node.depth + 1 : 1) * row_spread}
                                 >
                                     {node.key}
                                     <button
@@ -443,7 +450,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                             <td
                                                 key={`header-major-${i}-${leaf.path.length + column_index}`}
                                                 rowSpan={path.spread}
-                                                colSpan={secondary_spread}
+                                                colSpan={cell_spread}
                                             >
                                                 {node && `${node.value}`}
                                             </td>
