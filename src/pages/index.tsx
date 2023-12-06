@@ -39,9 +39,9 @@ export default class IndexPage extends React.Component {
                             { output : 3, status : `pass` },
                         ],
                         [
-                            { output : 1, status : `pass` },
-                            { status : `fail` },
                             { output : 3, status : `pass` },
+                            { status : `fail` },
+                            { output : 2, status : `pass` },
                         ],
                     ]}
                 />
@@ -201,13 +201,11 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
         const { state } = this
         const indices = state.indices
             .map(i => {
-                let value = (state.rows[i] || null) as Node | null
+                let node = (state.rows[i] || null) as Node | null
 
-                console.log(value)
+                if (node) node = sort_header.trace(node)
 
-                if (value) value = sort_header.trace(value)
-
-                return [ i, value ] as const
+                return [ i, node ] as const
             })
             .sort(([ _, a ], [ __, b ]) => compare(a, b))
             .map(([ i ]) => i)
@@ -268,11 +266,21 @@ type MatrixProps<Row, Column, Cell> = {
     rows     : Row[]
     cells    : ((Cell | undefined | null)[] | undefined | null)[]
 }
-type MatrixState = {}
+type MatrixState = {
+    column_nodes  : (Node | null)[]
+    column_header : Node | null
+    row_nodes     : (Node | null)[]
+    row_header    : Node | null
+    cell_nodes    : ((Node | null)[] | undefined)[]
+    cell_header   : Node | null
+    cell_indices  : number[]
+    sort_header : Node | null,
+    sort_order  : boolean,
+}
 
 class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column, Cell>, MatrixState> {
-    public render() {
-        const { caption, rows, columns, cells } = this.props
+    public static state<Row, Column, Cell>(props : MatrixProps<Row, Column, Cell>) : Readonly<MatrixState> {
+        const { rows, columns, cells } = props
         const column_nodes = columns
             .map(x => Node.from_object(x))
         const column_header = column_nodes
@@ -294,11 +302,81 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
             .filter((x) : x is Cell[] => !!x)
             .map(x => x.map((_, i) => i))
             .flat()
+            .concat(rows
+                .filter((x) : x is Row => !!x)
+                .map((_, i) => i)
+            )
             .reduce<number[]>((a, x) => {
                 if (a.indexOf(x) < 0) a.push(x)
 
                 return a
             }, [])
+
+        return {
+            column_nodes,
+            column_header,
+            row_nodes,
+            row_header,
+            cell_nodes,
+            cell_header,
+            cell_indices,
+            sort_header : null,
+            sort_order : false,
+        }
+    }
+
+    public state : Readonly<MatrixState> = Matrix.state(this.props)
+
+    private sort_rows = (sort_header : Node, sort_order : boolean) => () => {
+        const { state } = this
+        const cell_indices = state.row_nodes
+            .map((node, i) => {
+                if (node) node = sort_header.trace(node)
+
+                return [ i, node ] as const
+            })
+            .sort(([ _, a ], [ __, b ]) => compare(a, b))
+            .map(([ i ]) => i)
+
+        if (sort_order) cell_indices.reverse()
+
+        this.setState({ cell_indices, sort_header, sort_order })
+    }
+    private sort_cells = (column : number, sort_header : Node, sort_order : boolean) => () => {
+        const { state } = this
+        const cell_indices = state.cell_indices
+            .map(i => {
+                let node = (state.cell_nodes[column]?.at(i) || null) as Node | null
+
+                if (node) node = sort_header.trace(node)
+
+                return [ i, node ] as const
+            })
+            .sort(([ _, a ], [ __, b ]) => compare(a, b))
+            .map(([ i ]) => i)
+
+        if (sort_order) cell_indices.reverse()
+
+        this.setState({ cell_indices, sort_header, sort_order })
+    }
+
+    public render() {
+        const {
+            props : { caption },
+            state : {
+                column_nodes,
+                column_header,
+                row_nodes,
+                row_header,
+                cell_nodes,
+                cell_header,
+                cell_indices,
+                sort_header,
+                sort_order,
+            },
+            sort_rows,
+            sort_cells,
+        } = this
 
         const primary_spread = row_header?.spread || 1
         const secondary_spread = cell_header?.spread || 1
@@ -355,21 +433,34 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                 </thead>}
                 <thead>
                     {(function iterate(header : Node | null, i = 0) : React.ReactNode[] {
-                        const th = (key : string, span = 1) => (node : Node, i : number) => (
-                            <th
-                                key={`${key}-${i}`}
-                                colSpan={node.spread * span}
-                                rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
-                            >
-                                {node.key}
-                            </th>
-                        )
                         return header ? [
-                            <tr key={`header-primary-${i}`}>
-                                {[ header, ...header.all_next ].map(th(`header-secondary-${i}`, column_depth))}
+                            <tr key={`header-${i}`}>
+                                {[ header, ...header.all_next ].map((node, j) =>
+                                    <th
+                                        key={`header-rows-${i}-${j}`}
+                                        colSpan={node.spread * column_depth}
+                                        rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
+                                    >
+                                        {node.key}
+                                        <button onClick={sort_rows(node, node === sort_header ? !sort_order : sort_order)}>
+                                            {sort_order ? `↑` : `↓`}
+                                        </button>
+                                    </th>
+                                )}
                                 {cell_header && column_nodes.map((_, k) => cell_header
                                     .filter_all(x => x.depth === i)
-                                    .map(th(`header-main-${i}-${k}`))
+                                    .map((node, j) =>
+                                        <th
+                                            key={`header-cells-${i}-${k}-${j}`}
+                                            colSpan={node.spread}
+                                            rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
+                                        >
+                                            {node.key}
+                                            <button onClick={sort_cells(k, node, node === sort_header ? !sort_order : sort_order)}>
+                                                {sort_order ? `↑` : `↓`}
+                                            </button>
+                                        </th>
+                                    )
                                 )}
                             </tr>,
                             ...iterate(header.depth_first, i + 1)
