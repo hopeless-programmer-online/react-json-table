@@ -199,6 +199,7 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
 
     private sort = (sort_header : Node, sort_order : boolean) => () => {
         const { state } = this
+        const order_factor = sort_order ? +1 : -1
         const indices = state.indices
             .map(i => {
                 let node = (state.rows[i] || null) as Node | null
@@ -207,10 +208,8 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
 
                 return [ i, node ] as const
             })
-            .sort(([ _, a ], [ __, b ]) => compare(a, b))
+            .sort(([ _, a ], [ __, b ]) => compare(a, b) * order_factor)
             .map(([ i ]) => i)
-
-        if (sort_order) indices.reverse()
 
         this.setState({ indices, sort_header, sort_order })
     }
@@ -338,36 +337,35 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
 
     private sort_columns = (header : Node, order : boolean) => () => {
         const { state } = this
+        const order_factor = order ? +1 : -1
         const column_indices = state.column_nodes
             .map((node, i) => {
                 if (node) node = header.trace(node)
 
                 return [ i, node ] as const
             })
-            .sort(([ _, a ], [ __, b ]) => compare(a, b))
+            .sort(([ _, a ], [ __, b ]) => compare(a, b) * order_factor)
             .map(([ i ]) => i)
-
-        if (order) column_indices.reverse()
 
         this.setState({ column_indices, column_sort_header: header, column_sort_order: order })
     }
     private sort_rows = (header : Node, order : boolean) => () => {
         const { state } = this
+        const order_factor = order ? +1 : -1
         const cell_indices = state.row_nodes
             .map((node, i) => {
                 if (node) node = header.trace(node)
 
                 return [ i, node ] as const
             })
-            .sort(([ _, a ], [ __, b ]) => compare(a, b))
+            .sort(([ _, a ], [ __, b ]) => compare(a, b) * order_factor)
             .map(([ i ]) => i)
-
-        if (order) cell_indices.reverse()
 
         this.setState({ cell_indices, cell_sort_header: header, cell_sort_order: order })
     }
     private sort_cells = (column : number, header : Node, order : boolean) => () => {
         const { state } = this
+        const order_factor = order ? +1 : -1
         const cell_indices = state.cell_indices
             .map(i => {
                 let node = (state.cell_nodes[column]?.at(i) || null) as Node | null
@@ -376,10 +374,8 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
 
                 return [ i, node ] as const
             })
-            .sort(([ _, a ], [ __, b ]) => compare(a, b))
+            .sort(([ _, a ], [ __, b ]) => compare(a, b) * order_factor)
             .map(([ i ]) => i)
-
-        if (order) cell_indices.reverse()
 
         this.setState({ cell_indices, cell_sort_header: header, cell_sort_order: order })
     }
@@ -438,14 +434,14 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                             ], [])}
                             {column_indices
                             .map(i => column_nodes[i])
-                            .map((column, j) =>
+                            .map((column, column_index) =>
                                 column && function iterate(node : Node, path : Node[]) : React.ReactNode {
                                     const th = (path : Node, node : Node | null = null) => {
                                         if (i != path.spread_prev) return null
 
                                         return (
                                             <td
-                                                key={`header-major-${i}-${leaf.path.length + j}`}
+                                                key={`header-major-${i}-${leaf.path.length + column_index}`}
                                                 rowSpan={path.spread}
                                                 colSpan={secondary_spread}
                                             >
@@ -482,16 +478,17 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                         </button>
                                     </th>
                                 )}
-                                {cell_header && column_nodes.map((_, k) => cell_header
+                                {cell_header && column_indices
+                                .map((column_index) => cell_header
                                     .filter_all(x => x.depth === i)
                                     .map((node, j) =>
                                         <th
-                                            key={`header-cells-${i}-${k}-${j}`}
+                                            key={`header-cells-${i}-${column_index}-${j}`}
                                             colSpan={node.spread}
                                             rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
                                         >
                                             {node.key}
-                                            <button onClick={sort_cells(k, node, node === cell_sort_header ? !cell_sort_order : cell_sort_order)}>
+                                            <button onClick={sort_cells(column_index, node, node === cell_sort_header ? !cell_sort_order : cell_sort_order)}>
                                                 {cell_sort_order ? `↑` : `↓`}
                                             </button>
                                         </th>
@@ -503,14 +500,14 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                     })(row_header || cell_header).slice(1)}
                 </thead>
                 <tbody>
-                    {cell_indices.map((k) =>
+                    {cell_indices.map((row_index) =>
                         <tr
-                            key={`body-${k}`}
+                            key={`body-${row_index}`}
                         >
                             {row_header && (function process(header : Node, node : Node | null, i = 0) : React.ReactNode[] {
                                 if (header.empty || !node) return [
                                     <td
-                                        key={`body-${k}-${i}`}
+                                        key={`body-${row_index}-${i}`}
                                         colSpan={header.spread * column_depth}
                                     >
                                         {node && node.value}
@@ -518,14 +515,14 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                 ]
 
                                 return header.map((header, j) => process(header, node.get(header.key) || null, i + j))
-                            })(row_header, row_nodes[k])}
+                            })(row_header, row_nodes[row_index])}
                             {cell_header && column_indices
                             .map(i => cell_nodes[i])
-                            .map((nodes, j) =>
+                            .map((column_nodes, column_index) =>
                                 (function process(header : Node, node : Node | null, i = 0) : React.ReactNode[] {
                                     if (header.empty || !node) return [
                                         <td
-                                            key={`body-${k}-${j}-${i}`}
+                                            key={`body-${row_index}-${column_index}-${i}`}
                                             colSpan={header.spread}
                                         >
                                             {node && node.value}
@@ -533,7 +530,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                     ]
 
                                     return header.map((header, j) => process(header, node.get(header.key) || null, i + j))
-                                })(cell_header, (nodes && nodes[k] || null) as Node | null))
+                                })(cell_header, (column_nodes && column_nodes[row_index] || null) as Node | null))
                             }
                         </tr>
                     )}
@@ -544,6 +541,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
 }
 
 function compare(a : Node | null, b : Node | null) {
+    if (!a && !b) return 0
     if (!a) return -1
     if (!b) return +1
     if (a.value == b.value) return 0
