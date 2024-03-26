@@ -2,8 +2,8 @@ import React from 'react'
 import * as kt from '../key-tree'
 import styles from './table.module.scss'
 
-type Node = kt.Node<any>
-const Node = kt.Node<any>
+type Node = kt.Node<Payload>
+const Node = kt.Node<Payload>
 
 export default class IndexPage extends React.Component {
     public render() {
@@ -24,13 +24,30 @@ export default class IndexPage extends React.Component {
                 <Matrix
                     caption = {`test case runs`}
                     columns = {[
-                        { name : `test suite #1`, status : `pass`, KPI : { a : 0.1, b : 0.2 } },
-                        { name : `test suite #2`, status : `fail`, KPI : { a : 0.3, b : 0.4 } },
+                        {
+                            name : `test suite #1`,
+                            status : `pass`,
+                            KPI : {
+                                a : new Entry({
+                                    element : <span style={{ color : `red` }}>0.1</span>,
+                                    value : 0.1,
+                                }),
+                                b : 0.2,
+                            },
+                        },
+                        {
+                            name : `test suite #2`,
+                            status : `fail`,
+                            KPI : {
+                                a : 0.3,
+                                b : 0.4,
+                            },
+                        },
                     ]}
                     rows    = {[
-                        { name : `text case #1`, data : { input : 1, reference : 3 } },
-                        { name : `text case #2`, data : { input : 2, reference : 1 } },
-                        { name : `text case #3`, data : { input : 3, reference : 2 } },
+                        { name : `test case #1`, data : { input : 1, reference : 3 } },
+                        { name : `test case #2`, data : { input : 2, reference : 1 } },
+                        { name : `test case #3`, data : { input : 3, reference : 2 } },
                     ]}
                     cells   = {[
                         [
@@ -65,7 +82,7 @@ type TableState = {
 class Table<Element> extends React.Component<TableProps<Element>, TableState> {
     private static state<Element>(props : TableProps<Element>) : TableState {
         const rows = props.elements
-            .map(x => Node.from_object(x))
+            .map(x => parse_node(x))
             .filter((x) : x is Node => !!x)
         const header = rows
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
@@ -167,19 +184,19 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
     public static state<Row, Column, Cell>(props : MatrixProps<Row, Column, Cell>) : Readonly<MatrixState> {
         const { rows, columns, cells } = props
         const column_nodes = columns
-            .map(x => Node.from_object(x))
+            .map(x => parse_node(x))
         const column_header = column_nodes
             .filter((x) : x is Node => !!x)
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
         const row_nodes = rows
-            .map(x => Node.from_object(x))
+            .map(x => parse_node(x))
         const row_header = row_nodes
             .filter((x) : x is Node => !!x)
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
         const cell_nodes = cells
-            .map(x => x?.map(x => Node.from_object(x)))
+            .map(x => x?.map(x => parse_node(x)))
         const cell_header = cell_nodes
-            .filter((x) : x is (Node | null)[] => !!x)
+            .filter((x) : x is (Node)[] => !!x)
             .flat()
             .filter((x) : x is Node => !!x)
             .reduce<Node | null>((a, x) => a ? a.merge(x) : x, null)
@@ -336,7 +353,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                                 rowSpan={path.spread}
                                                 colSpan={cell_spread}
                                             >
-                                                {node && `${node.value}`}
+                                                {node && node.value.element}
                                             </td>
                                         )
                                     }
@@ -403,7 +420,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                         key={`body-${row_index}-${i}`}
                                         colSpan={header.spread * column_depth}
                                     >
-                                        {node && node.value}
+                                        {node && node.value.element}
                                     </td>
                                 ]
 
@@ -418,7 +435,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                             key={`body-${row_index}-${column_index}-${i}`}
                                             colSpan={header.spread}
                                         >
-                                            {node && node.value}
+                                            {node && node.value.element}
                                         </td>
                                     ]
 
@@ -433,11 +450,98 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
     }
 }
 
+type Value = Date | string | number | boolean | null | undefined
+
+class Payload {
+    public static readonly symbol : unique symbol = Symbol(`Payload`)
+
+    public element  : JSX.Element
+    public value    : Value
+
+    public constructor({
+        element,
+        value,
+    } : {
+        element  : JSX.Element,
+        value    : Value
+    }) {
+        this.element  = element
+        this.value    = value
+    }
+
+    public get symbol() : typeof Payload.symbol {
+        return Payload.symbol
+    }
+}
+
+type Children = { [key : string] : Entry }
+
+class Entry extends Payload {
+    public children : Children
+
+    public constructor({
+        element,
+        value,
+        children = {},
+    } : {
+        element   : JSX.Element,
+        value     : Value
+        children? : Children,
+    }) {
+        super({ element, value })
+
+        this.children = children
+    }
+}
+
 function compare(a : Node | null, b : Node | null) {
     if (!a && !b) return 0
     if (!a) return -1
     if (!b) return +1
-    if (a.value == b.value) return 0
 
-    return a.value > b.value ? +1 : -1
+    const x = a.value.value ?? 0
+    const y = b.value.value ?? 0
+
+    if (x == y) return 0
+
+    return x > y ? +1 : -1
+}
+
+function parse_entry(object : any) : Entry {
+    if (object instanceof Entry) return object
+
+    const children : Children = {}
+
+    if (typeof object === `object` && object !== null) Object.entries(object).forEach(([ key, value ]) =>
+        children[key] = parse_entry(value)
+    )
+
+    const value = (
+        object instanceof Date ||
+        typeof object === `string` ||
+        typeof object === `number` ||
+        typeof object === `boolean` ||
+        object === null ||
+        object === undefined
+    ) ? object : undefined
+
+    return new Entry({
+        element : value,
+        value,
+        children,
+    })
+}
+
+function parse_node(object : any, key? : string) : Node {
+    const entry = parse_entry(object)
+    const node = new Node({
+        value : entry,
+        key,
+    })
+
+    Object.entries(entry.children).forEach(([ key, entry ]) =>
+        node.add(parse_node(entry, key))
+    )
+
+    return node
 }
