@@ -1,6 +1,6 @@
 import React from 'react'
 import * as kt from './key-tree'
-import styles from './table.module.scss'
+// import styles from './table.module.scss'
 
 type Value = Date | string | number | boolean | null | undefined
 
@@ -101,7 +101,9 @@ export class Table<Element> extends React.Component<TableProps<Element>, TableSt
         } = this
 
         return (
-            <table className={styles.table}>
+            <table
+                // className={styles.table}
+            >
                 {title && <caption>
                     {title}
                 </caption>}
@@ -112,7 +114,7 @@ export class Table<Element> extends React.Component<TableProps<Element>, TableSt
                                 {[ node, ...node.all_next ].map((node, j) =>
                                     <th
                                         key={`header-${i}-${j}`}
-                                        className={node === sort_header ? styles.sort : ``}
+                                        // className={node === sort_header ? styles.sort : ``}
                                         colSpan={node.spread}
                                         rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
                                     >
@@ -294,7 +296,9 @@ export class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, 
         const column_depth = column_header?.max_depth || 1
 
         return (
-            <table className={styles.table}>
+            <table
+                // className={styles.table}
+            >
                 {caption && <caption>
                     {caption}
                 </caption>}
@@ -311,7 +315,7 @@ export class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, 
                             {leaf.path.slice(1).reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
                                 <th
                                     key={`header-major-${i}-${j}`}
-                                    className={node === column_sort_header ? styles.sort : ``}
+                                    // className={node === column_sort_header ? styles.sort : ``}
                                     rowSpan={node.spread}
                                     colSpan={(node.empty ? node.root.max_depth - node.depth + 1 : 1) * row_spread}
                                 >
@@ -360,7 +364,7 @@ export class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, 
                                 {[ header, ...header.all_next ].map((node, j) =>
                                     <th
                                         key={`header-rows-${i}-${j}`}
-                                        className={node === cell_sort_header ? styles.sort : ``}
+                                        // className={node === cell_sort_header ? styles.sort : ``}
                                         colSpan={node.spread * column_depth}
                                         rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
                                     >
@@ -376,7 +380,7 @@ export class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, 
                                     .map((node, j) =>
                                         <th
                                             key={`header-cells-${i}-${column_index}-${j}`}
-                                            className={node === cell_sort_header ? styles.sort : ``}
+                                            // className={node === cell_sort_header ? styles.sort : ``}
                                             colSpan={node.spread}
                                             rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
                                         >

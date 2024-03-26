@@ -6,7 +6,7 @@ export class Node<Value> {
             const root = new Node<any>({ key, value : object })
 
             Object.entries(object)
-                .map(([ key, object ]) => Node<any>.from_object(object, key))
+                .map(([ key, object ]) => Node.from_object(object, key))
                 .filter((node) : node is Node<any> => !!node)
                 .forEach(node => root.add(node))
 
@@ -232,27 +232,27 @@ export class Node<Value> {
 
         return node
     }
-    public for_each(callback : (node : Node<Value>, index : number, parent : typeof this) => void) {
+    public for_each(callback : (node : Node<Value>, index : number, parent : Node<Value>) => void) {
         Object.values(this.nodes).forEach(
             (node, index) => callback(node, index, this)
         )
     }
-    public map<T>(callback : (node : Node<Value>, index : number, parent : typeof this) => T) : T[] {
+    public map<T>(callback : (node : Node<Value>, index : number, parent : Node<Value>) => T) : T[] {
         const result : T[] = []
 
         this.for_each((...params) => result.push(callback(...params)))
 
         return result
     }
-    public reduce<T>(acc : T, callback : (acc : T, node : Node<Value>, index : number, parent : typeof this) => T) : T {
+    public reduce<T>(acc : T, callback : (acc : T, node : Node<Value>, index : number, parent : Node<Value>) => T) : T {
         this.for_each((...params) => acc = callback(acc, ...params))
 
         return acc
     }
-    public sum(callback : (node : Node<Value>, index : number, parent : typeof this) => number) : number {
+    public sum(callback : (node : Node<Value>, index : number, parent : Node<Value>) => number) : number {
         return this.reduce(0, (a, ...params) => a + callback(...params))
     }
-    public max(callback : (node : Node<Value>, index : number, parent : typeof this) => number) : number {
+    public max(callback : (node : Node<Value>, index : number, parent : Node<Value>) => number) : number {
         return this.reduce(-Infinity, (a, ...params) => Math.max(a, callback(...params)))
     }
     public filter_all(callback : (node : Node<Value>) => boolean) : Node<Value>[] {

@@ -2,6 +2,8 @@
   "name": "react-json-table",
   "version": "0.1.0",
   "description": "Interactive react table with filters, sorting.",
+  "main": "dist/table.js",
+  "types": "dist/table.d.ts",
   "scripts": {},
   "repository": {
     "type": "git",

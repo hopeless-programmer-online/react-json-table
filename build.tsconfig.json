@@ -15,16 +15,16 @@
     "module": "CommonJS",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "moduleResolution": "node",
     "downlevelIteration": true,
     "outDir": "dist",
-    "declaration": true,
+    "declaration": true
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
+    "src/table.tsx",
+    "src/table.module.scss",
+    "src/key-tree.tsx"
   ],
   "exclude": [
     "node_modules"
