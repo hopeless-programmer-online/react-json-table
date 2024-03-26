@@ -28,9 +28,9 @@ export default class IndexPage extends React.Component {
                         { name : `test suite #2`, status : `fail`, KPI : { a : 0.3, b : 0.4 } },
                     ]}
                     rows    = {[
-                        { name : `text case #1`, data : { input : 1, reference : 1 } },
-                        { name : `text case #2`, data : { input : 2, reference : 2 } },
-                        { name : `text case #3`, data : { input : 3, reference : 3 } },
+                        { name : `text case #1`, data : { input : 1, reference : 3 } },
+                        { name : `text case #2`, data : { input : 2, reference : 1 } },
+                        { name : `text case #3`, data : { input : 3, reference : 2 } },
                     ]}
                     cells   = {[
                         [
@@ -47,126 +47,6 @@ export default class IndexPage extends React.Component {
                 />
             </>
         )
-
-        // return (
-        //     <table className={styles.table}>
-        //         <caption>
-        //             Test Case Runs (4)
-        //         </caption>
-        //         <colgroup>
-        //             <col span={2}/>
-        //             <col span={2} style={{ backgroundColor : `rgb(255, 240, 240)` }}/>
-        //             <col span={2} style={{ backgroundColor : `rgb(240, 255, 240)` }}/>
-        //             <col span={2} style={{ backgroundColor : `rgb(240, 240, 255)` }}/>
-        //         </colgroup>
-        //         <thead>
-        //             <tr>
-        //                 <th rowSpan={3}>Test Suite Run</th>
-        //                 <th>Name</th>
-        //                 <td colSpan={2}>Test Suite Run #1</td>
-        //                 <td colSpan={2}>Test Suite Run #2</td>
-        //                 <td colSpan={2}>Test Suite Run #3</td>
-        //             </tr>
-        //             <tr>
-        //                 <th>Date</th>
-        //                 <td colSpan={2}>2023/01/01</td>
-        //                 <td colSpan={2}>2023/01/02</td>
-        //                 <td colSpan={2}>2023/01/03</td>
-        //             </tr>
-        //             <tr>
-        //                 <th>Status</th>
-        //                 <td colSpan={2}>FAIL</td>
-        //                 <td colSpan={2}>PASS</td>
-        //                 <td colSpan={2}>PASS</td>
-        //             </tr>
-        //         </thead>
-        //         <thead>
-        //             <tr>
-        //                 <th colSpan={2}>Test Case</th>
-        //                 <th colSpan={6}>Test Case Run</th>
-        //                 {/* <th rowSpan={2}>Status</th>
-        //                 <th rowSpan={2}>Actual</th>
-        //                 <th rowSpan={2}>Status</th>
-        //                 <th rowSpan={2}>Actual</th>
-        //                 <th rowSpan={2}>Status</th>
-        //                 <th rowSpan={2}>Actual</th> */}
-        //             </tr>
-        //             <tr>
-        //                 <th rowSpan={1}>Name</th>
-        //                 <th rowSpan={1}>Expected</th>
-        //                 {/* <th colSpan={2}>Test Suite Run #1</th>
-        //                 <th colSpan={2}>Test Suite Run #2</th>
-        //                 <th colSpan={2}>Test Suite Run #3</th> */}
-        //                 <th>Status</th>
-        //                 <th>Actual</th>
-        //                 <th>Status</th>
-        //                 <th>Actual</th>
-        //                 <th>Status</th>
-        //                 <th>Actual</th>
-        //             </tr>
-        //             {/* <tr>
-        //                 <th>Status</th>
-        //                 <th>Actual</th>
-        //                 <th>Status</th>
-        //                 <th>Actual</th>
-        //                 <th>Status</th>
-        //                 <th>Actual</th>
-        //             </tr> */}
-        //         </thead>
-        //         <tbody>
-        //             <tr>
-        //                 <td>test case #1</td>
-        //                 <td>101</td>
-        //                 <td>pass</td>
-        //                 <td>101</td>
-        //                 <td>pass</td>
-        //                 <td>101</td>
-        //                 <td>pass</td>
-        //                 <td>101</td>
-        //             </tr>
-        //             <tr>
-        //                 <td>test case #2</td>
-        //                 <td>102</td>
-        //                 <td>fail</td>
-        //                 <td>101</td>
-        //                 <td>pass</td>
-        //                 <td>102</td>
-        //                 <td>pass</td>
-        //                 <td>102</td>
-        //             </tr>
-        //             <tr>
-        //                 <td>test case #3</td>
-        //                 <td>103</td>
-        //                 <td>pass</td>
-        //                 <td>103</td>
-        //                 <td>pass</td>
-        //                 <td>103</td>
-        //                 <td>pass</td>
-        //                 <td>103</td>
-        //             </tr>
-        //             <tr>
-        //                 <td>test case #4</td>
-        //                 <td>104</td>
-        //                 <td>pass</td>
-        //                 <td>104</td>
-        //                 <td>pass</td>
-        //                 <td>104</td>
-        //                 <td>pass</td>
-        //                 <td>104</td>
-        //             </tr>
-        //         </tbody>
-        //         {/* <tfoot>
-        //             <tr>
-        //                 <th colSpan={2}>mean</th>
-        //                 <td>pass</td>
-        //                 <td>102</td>
-        //             </tr>
-        //             <tr>
-        //                 <th colSpan={2}>median</th>
-        //             </tr>
-        //         </tfoot> */}
-        //     </table>
-        // )
     }
 }
 
@@ -233,11 +113,14 @@ class Table<Element> extends React.Component<TableProps<Element>, TableState> {
                                 {[ node, ...node.all_next ].map((node, j) =>
                                     <th
                                         key={`header-${i}-${j}`}
+                                        className={node === sort_header ? styles.sort : ``}
                                         colSpan={node.spread}
                                         rowSpan={node.empty ? node.root.max_depth - node.depth + 1 : 1}
                                     >
                                         {node.key}
-                                        <button onClick={sort(node, node === sort_header ? !sort_order : sort_order)}>
+                                        <button
+                                            onClick={sort(node, node === sort_header ? !sort_order : sort_order)}
+                                        >
                                             {sort_order ? `↓` : `↑`}
                                         </button>
                                     </th>
@@ -428,6 +311,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                             {leaf.path.slice(1).reduce<React.ReactNode[]>((row, node, j) => [ ...row, ...(i == node.spread_prev ? [
                                 <th
                                     key={`header-major-${i}-${j}`}
+                                    className={node === column_sort_header ? styles.sort : ``}
                                     rowSpan={node.spread}
                                     colSpan={(node.empty ? node.root.max_depth - node.depth + 1 : 1) * row_spread}
                                 >
@@ -476,6 +360,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                 {[ header, ...header.all_next ].map((node, j) =>
                                     <th
                                         key={`header-rows-${i}-${j}`}
+                                        className={node === cell_sort_header ? styles.sort : ``}
                                         colSpan={node.spread * column_depth}
                                         rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
                                     >
@@ -491,6 +376,7 @@ class Matrix<Row, Column, Cell> extends React.Component<MatrixProps<Row, Column,
                                     .map((node, j) =>
                                         <th
                                             key={`header-cells-${i}-${column_index}-${j}`}
+                                            className={node === cell_sort_header ? styles.sort : ``}
                                             colSpan={node.spread}
                                             rowSpan={node.empty ? max_element_depth - node.depth + 1 : 1}
                                         >

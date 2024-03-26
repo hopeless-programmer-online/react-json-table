@@ -200,13 +200,20 @@
 
                     // visibility: hidden;
                 }
+                > button {
+                    visibility: hidden;
+                }
 
-                // &:hover,
-                // &:focus {
-                //     > input {
-                //         visibility: visible;
-                //     }
-                // }
+                &:hover,
+                &:focus,
+                &.sort {
+                    // > input {
+                    //     visibility: visible;
+                    // }
+                    > button {
+                        visibility: visible;
+                    }
+                }
             }
         }
     }
